@@ -397,9 +397,9 @@ const CREDITS_ZH = [
   ['星墜地球記', 'big'], [''], ['EARTHFALL CHRONICLE'], [''], [''],
   ['— 登場人物 —', 'y'], ['朔　　鐵軌鎮的拾荒者'], ['蘭　　機械師'], ['老齒輪　退役的教團騎士'], ['露米　種子守護機'], [''],
   ['玲博士　搖籃號的植物學家'], ['薇伊　教團審問官'], ['哈爾艦長　工程師小野'], ['泰絲婆婆　瑪格婆婆'], ['鐵軌鎮與風車村的人們'], [''], [''],
-  ['— 星墜後的生物 —', 'y'], ['鏽鼠　灰鴉　噬人草　哨戒機'], ['晶殼鼠　隧道蝙蝠　電火花'], ['廢墟掠奪者　廢鐵兵　武裝無人機'], ['玻璃蟹　沙鰻　晶石魔像'], ['教團騎士　鋼之天使　凍原巨獸　鐵狼'], [''],
+  ['— 星墜後的生物 —', 'y'], ['鏽鼠　灰鴉　噬人草　哨戒機'], ['晶殼鼠　隧道蝙蝠　監視眼'], ['廢墟掠奪者　廢鐵兵　武裝無人機'], ['玻璃蛛　沙鰻　晶石魔像'], ['教團騎士　鋼之天使　凍原巨獸　鐵狼'], [''],
   ['地鐵巨蟲'], ['霓虹巨像'], ['晶蠍女王'], ['鐵之主教'], ['搖籃'], [''], [''],
-  ['故事、畫面、音樂'], ['全部以程式碼繪製與合成'], [''], ['字型：俐方體11號 (Cubic 11)'], [''], [''],
+  ['故事、音樂、地圖與人物'], ['以程式碼繪製與合成'], [''], ['怪物圖像 (CC-BY 3.0)'], ['Charles Gabriel (Antifarea)'], ['Stephen "Redshrike" Challener'], ['Blarumyrran   LordNeo   Balmer'], ['Atrus   Scrittl (CC0)'], ['OpenGameArt.org'], [''], ['字型：俐方體11號 (Cubic 11)'], [''], [''],
   ['天空變藍了。'], ['一千兩百萬顆種子，'], ['正在世界的每個角落發芽。'], [''], [''],
   ['感謝你的遊玩！', 'y'], [''], [''], ['—— 完 ——', 'big'],
 ];
@@ -407,9 +407,9 @@ const CREDITS_EN = [
   ['EARTHFALL', 'big'], [''], ['CHRONICLE', 'big'], [''], ['星墜地球記'], [''], [''],
   ['- CAST -', 'y'], ['Saku - scavenger of Railtown'], ['Ran - mechanic'], ['Old Gears - a church knight who deserted'], ['Lumi - seed keeper'], [''],
   ['Dr. Rei - botanist of Cradle'], ['Vey - inquisitor of the church'], ['Captain Hale   Engineer Ono'], ['Granny Tess   Granny Mag'], ['and the people of Railtown and the Windfarm'], [''], [''],
-  ['- LIFE AFTER THE EARTHFALL -', 'y'], ['Rust Rat   Ash Crow   Snapweed'], ['Sentry Drone   Crystal Rat   Tunnel Bat'], ['Live Spark   Ruin Raider   Scrap Soldier'], ['Gun Drone   Glass Crab   Sand Eel'], ['Crystal Golem   Church Knight   Steel Angel'], ['Tundra Beast   Iron Wolf'], [''],
+  ['- LIFE AFTER THE EARTHFALL -', 'y'], ['Rust Rat   Ash Crow   Snapweed'], ['Sentry Drone   Crystal Rat   Tunnel Bat'], ['Watcher Eye   Ruin Raider   Scrap Soldier'], ['Gun Drone   Glass Spider   Sand Eel'], ['Crystal Golem   Church Knight   Steel Angel'], ['Tundra Beast   Iron Wolf'], [''],
   ['The Metro Worm'], ['The Neon Colossus'], ['The Crystal Scorpion Queen'], ['The Iron Bishop'], ['Cradle'], [''], [''],
-  ['Story, art and music'], ['all made in code'], [''], ['Font: Cubic 11'], [''], [''],
+  ['Story, music, maps and heroes'], ['made in code'], [''], ['Monster sprites (CC-BY 3.0)'], ['Charles Gabriel (Antifarea)'], ['Stephen "Redshrike" Challener'], ['Blarumyrran   LordNeo   Balmer'], ['Atrus   Scrittl (CC0)'], ['hosted by OpenGameArt.org'], [''], ['Font: Cubic 11'], [''], [''],
   ['The sky is blue again.'], ['Twelve million seeds'], ['are sprouting all over the world.'], [''], [''],
   ['THANK YOU FOR PLAYING!', 'y'], [''], [''], ['THE END', 'big'],
 ];

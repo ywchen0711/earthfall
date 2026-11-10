@@ -88,27 +88,27 @@ export const SPECIALS = {
 // art: key into the monster art; hue turns a family into its stronger cousins
 export const ENEMIES = {
   rat:      { name: '鏽鼠', art: 'rat', hp: 24, atk: 11, def: 3, int: 3, agi: 9, exp: 7, gold: 5, drop: ['herb', 0.15] },
-  crow:     { name: '灰鴉', art: 'bird', hue: 200, sat: 0.3, hp: 20, atk: 13, def: 2, int: 2, agi: 16, exp: 8, gold: 5 },
-  snapweed: { name: '噬人草', art: 'plant', hp: 34, atk: 14, def: 5, int: 4, agi: 6, exp: 10, gold: 6, acts: [['atk', 3], ['spore', 1]] },
+  crow:     { name: '灰鴉', art: 'crow', hp: 20, atk: 13, def: 2, int: 2, agi: 16, exp: 8, gold: 5 },
+  snapweed: { name: '噬人草', art: 'snapweed', hp: 34, atk: 14, def: 5, int: 4, agi: 6, exp: 10, gold: 6, acts: [['atk', 3], ['spore', 1]] },
   drone:    { name: '哨戒機', art: 'drone', hp: 30, atk: 13, def: 8, int: 10, agi: 12, exp: 10, gold: 9, weak: 'bolt', acts: [['atk', 3], ['ember', 1]] },
-  crystrat: { name: '晶殼鼠', art: 'rat', hue: 160, hp: 60, atk: 19, def: 12, int: 6, agi: 10, exp: 16, gold: 12, drop: ['antidote', 0.2] },
+  crystrat: { name: '晶殼鼠', art: 'crystrat', hp: 60, atk: 19, def: 12, int: 6, agi: 10, exp: 16, gold: 12, drop: ['antidote', 0.2] },
   bat:      { name: '隧道蝙蝠', art: 'bat', hp: 50, atk: 22, def: 8, int: 6, agi: 20, exp: 16, gold: 10, acts: [['atk', 3], ['drain', 1]] },
-  spark:    { name: '電火花', art: 'wisp', hue: 170, hp: 56, atk: 18, def: 10, int: 18, agi: 16, exp: 18, gold: 14, weak: 'ice', acts: [['atk', 1], ['zap', 2]] },
-  worm:     { name: '地鐵巨蟲', art: 'serpent', hue: 300, boss: true, hp: 1250, atk: 34, def: 18, int: 15, agi: 8, exp: 300, gold: 400, acts: [['atk', 3], ['twin', 2], ['spore', 1], ['bubble', 2]] },
-  raider:   { name: '廢墟掠奪者', art: 'brigand', hp: 110, atk: 32, def: 18, int: 8, agi: 12, exp: 34, gold: 30, acts: [['atk', 3], ['twin', 1]], drop: ['herb', 0.2] },
-  scrapper: { name: '廢鐵兵', art: 'bones', hue: 200, sat: 0.4, hp: 95, atk: 30, def: 22, int: 5, agi: 9, exp: 30, gold: 22, weak: 'bolt', drop: ['water', 0.12] },
-  drone2:   { name: '武裝無人機', art: 'drone', hue: 120, hp: 120, atk: 36, def: 24, int: 22, agi: 18, exp: 40, gold: 30, weak: 'bolt', acts: [['atk', 2], ['ember', 2]] },
-  neonking: { name: '霓虹巨像', art: 'golem', hue: 250, boss: true, hp: 2000, atk: 42, def: 26, int: 20, agi: 10, exp: 600, gold: 700, weak: 'ice', acts: [['atk', 3], ['twin', 2], ['zap', 2], ['harden', 1]] },
-  glasscrab:{ name: '玻璃蟹', art: 'crab', hue: 150, hp: 180, atk: 44, def: 34, int: 10, agi: 8, exp: 58, gold: 40, weak: 'bolt', acts: [['atk', 3], ['bubble', 1]] },
-  sandeel:  { name: '沙鰻', art: 'serpent', hue: 40, hp: 160, atk: 42, def: 24, int: 16, agi: 15, exp: 55, gold: 38, acts: [['atk', 3], ['wave', 1]], drop: ['hiherb', 0.12] },
-  crysgolem:{ name: '晶石魔像', art: 'golem', hue: 160, hp: 340, atk: 50, def: 46, int: 14, agi: 8, exp: 80, gold: 50, weak: 'bolt', drop: ['water', 0.15] },
-  scorpion: { name: '晶蠍女王', art: 'crab', hue: 300, sat: 1.2, boss: true, hp: 2400, atk: 46, def: 30, int: 24, agi: 18, exp: 800, gold: 900, acts: [['atk', 2], ['twin', 2], ['spore', 2], ['wave', 1]] },
-  knightc:  { name: '教團騎士', art: 'brigand', hue: 200, hp: 260, atk: 52, def: 34, int: 18, agi: 14, exp: 90, gold: 60, acts: [['atk', 3], ['twin', 1]], drop: ['hiherb', 0.15] },
-  angel:    { name: '鋼之天使', art: 'gargoyle', hue: 180, sat: 0.5, hp: 380, atk: 55, def: 50, int: 20, agi: 12, exp: 95, gold: 60, weak: 'bolt' },
-  bishop:   { name: '鐵之主教', art: 'knight', hue: 30, boss: true, hp: 2900, atk: 50, def: 32, int: 26, agi: 20, exp: 1000, gold: 1000, acts: [['atk', 2], ['icefang', 2], ['tide', 2], ['mist', 1], ['drain', 1]] },
-  frostbeast:{ name: '凍原巨獸', art: 'yeti', hp: 420, atk: 58, def: 40, int: 18, agi: 12, exp: 110, gold: 70, weak: 'fire', acts: [['atk', 3], ['icefang', 1]] },
-  ironwolf: { name: '鐵狼', art: 'wolf', hue: 180, sat: 0.4, hp: 300, atk: 56, def: 34, int: 10, agi: 22, exp: 100, gold: 60, acts: [['atk', 3], ['twin', 1]] },
-  cradle:   { name: '搖籃', art: 'core', boss: true, hp: 3800, atk: 55, def: 36, int: 22, agi: 20, exp: 0, gold: 0, acts: [['atk', 2], ['twin', 2], ['tide', 2], ['abyss', 1], ['icefang', 1]] },
+  spark:    { name: '監視眼', art: 'spark', hp: 56, atk: 18, def: 10, int: 18, agi: 16, exp: 18, gold: 14, weak: 'ice', acts: [['atk', 1], ['zap', 2]] },
+  worm:     { name: '地鐵巨蟲', art: 'worm', boss: true, hp: 1250, atk: 34, def: 18, int: 15, agi: 8, exp: 300, gold: 400, acts: [['atk', 3], ['twin', 2], ['spore', 1], ['bubble', 2]] },
+  raider:   { name: '廢墟掠奪者', art: 'raider', hp: 110, atk: 32, def: 18, int: 8, agi: 12, exp: 34, gold: 30, acts: [['atk', 3], ['twin', 1]], drop: ['herb', 0.2] },
+  scrapper: { name: '廢鐵兵', art: 'scrapper', hp: 95, atk: 30, def: 22, int: 5, agi: 9, exp: 30, gold: 22, weak: 'bolt', drop: ['water', 0.12] },
+  drone2:   { name: '武裝無人機', art: 'drone2', hp: 120, atk: 36, def: 24, int: 22, agi: 18, exp: 40, gold: 30, weak: 'bolt', acts: [['atk', 2], ['ember', 2]] },
+  neonking: { name: '霓虹巨像', art: 'neonking', boss: true, hp: 2000, atk: 42, def: 26, int: 20, agi: 10, exp: 600, gold: 700, weak: 'ice', acts: [['atk', 3], ['twin', 2], ['zap', 2], ['harden', 1]] },
+  glasscrab:{ name: '玻璃蛛', art: 'glasscrab', hp: 180, atk: 44, def: 34, int: 10, agi: 8, exp: 58, gold: 40, weak: 'bolt', acts: [['atk', 3], ['bubble', 1]] },
+  sandeel:  { name: '沙鰻', art: 'sandeel', hp: 160, atk: 42, def: 24, int: 16, agi: 15, exp: 55, gold: 38, acts: [['atk', 3], ['wave', 1]], drop: ['hiherb', 0.12] },
+  crysgolem:{ name: '晶石魔像', art: 'crysgolem', hp: 340, atk: 50, def: 46, int: 14, agi: 8, exp: 80, gold: 50, weak: 'bolt', drop: ['water', 0.15] },
+  scorpion: { name: '晶蠍女王', art: 'scorpion', boss: true, hp: 2400, atk: 46, def: 30, int: 24, agi: 18, exp: 800, gold: 900, acts: [['atk', 2], ['twin', 2], ['spore', 2], ['wave', 1]] },
+  knightc:  { name: '教團騎士', art: 'knightc', hp: 260, atk: 52, def: 34, int: 18, agi: 14, exp: 90, gold: 60, acts: [['atk', 3], ['twin', 1]], drop: ['hiherb', 0.15] },
+  angel:    { name: '鋼之天使', art: 'angel', hp: 380, atk: 55, def: 50, int: 20, agi: 12, exp: 95, gold: 60, weak: 'bolt' },
+  bishop:   { name: '鐵之主教', art: 'bishop', boss: true, hp: 2900, atk: 50, def: 32, int: 26, agi: 20, exp: 1000, gold: 1000, acts: [['atk', 2], ['icefang', 2], ['tide', 2], ['mist', 1], ['drain', 1]] },
+  frostbeast:{ name: '凍原巨獸', art: 'frostbeast', hp: 420, atk: 58, def: 40, int: 18, agi: 12, exp: 110, gold: 70, weak: 'fire', acts: [['atk', 3], ['icefang', 1]] },
+  ironwolf: { name: '鐵狼', art: 'ironwolf', hp: 300, atk: 56, def: 34, int: 10, agi: 22, exp: 100, gold: 60, acts: [['atk', 3], ['twin', 1]] },
+  cradle:   { name: '搖籃', art: 'cradle', boss: true, hp: 3800, atk: 55, def: 36, int: 22, agi: 20, exp: 0, gold: 0, acts: [['atk', 2], ['twin', 2], ['tide', 2], ['abyss', 1], ['icefang', 1]] },
 };
 // monster techniques; the ids seren/ordath rules look for are cradle's and bishop's now
 export const TECHS = {
@@ -169,9 +169,9 @@ localize(SPECIALS, {
   ironfall: ['Anvil Drop', 'Shatters the ground under all enemies'], arklight: ['Sprout Light', 'Heals everyone and cures ailments'],
 });
 localize(ENEMIES, {
-  rat: ['Rust Rat'], crow: ['Ash Crow'], snapweed: ['Snapweed'], drone: ['Sentry Drone'], crystrat: ['Crystal Rat'], bat: ['Tunnel Bat'], spark: ['Live Spark'],
+  rat: ['Rust Rat'], crow: ['Ash Crow'], snapweed: ['Snapweed'], drone: ['Sentry Drone'], crystrat: ['Crystal Rat'], bat: ['Tunnel Bat'], spark: ['Watcher Eye'],
   worm: ['The Metro Worm'], raider: ['Ruin Raider'], scrapper: ['Scrap Soldier'], drone2: ['Gun Drone'], neonking: ['The Neon Colossus'],
-  glasscrab: ['Glass Crab'], sandeel: ['Sand Eel'], crysgolem: ['Crystal Golem'], scorpion: ['The Crystal Scorpion Queen'],
+  glasscrab: ['Glass Spider'], sandeel: ['Sand Eel'], crysgolem: ['Crystal Golem'], scorpion: ['The Crystal Scorpion Queen'],
   knightc: ['Church Knight'], angel: ['Steel Angel'], bishop: ['The Iron Bishop'], frostbeast: ['Tundra Beast'], ironwolf: ['Iron Wolf'], cradle: ['Cradle'],
 });
 localize(TECHS, {

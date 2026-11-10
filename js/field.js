@@ -1,9 +1,10 @@
 // Walking around: maps, the party trailing behind the leader, NPCs, chests, push-block puzzles,
 // floor switches, gates, pits, colour posts, ice, and the visible monsters of the dungeons.
-import { ctx, W, H, canvas, fromGrid, text, textW, windowBox, Painter, ramp, hash } from './gfx.js';
+import { ctx, W, H, canvas, fromGrid, text, textW, windowBox, Painter, ramp, hash, fine } from './gfx.js';
 import { renderMap, solidKind, TILES } from './tiles.js';
 import { sprite } from './sprites.js';
 import { miniArt, enemyArt } from './enemies.js';
+const fineOf = (a) => (a.fs ? fine(a.fs) : 1);
 import { input } from './input.js';
 import { sfx } from './audio.js';
 import { S } from './party.js';
@@ -430,10 +431,10 @@ function drawEnt(e, cx, cy) {
       const a = miniArt(e.art, e.hue || 0), b = Math.abs(Math.sin((F.frame + e.n * 13) / 10)) * 2;
       if (e.stun && F.frame % 4 < 2) break;
       ctx.drawImage(shadow, x + 1, y + 12);
-      ctx.drawImage(e.dir === 'r' ? flipped(e.art, a) : a, x + 8 - Math.floor(a.width / 2), y + 14 - a.height - Math.round(b));
+      ctx.drawImage(e.dir === 'r' ? flipped(e.art, a) : a, Math.round(x + 8 - a.width * fineOf(a) / 2), Math.round(y + 14 - a.height * fineOf(a) - b), a.width * fineOf(a), a.height * fineOf(a));
       break;
     }
-    case 'boss': { const a = enemyArt(e.art, e.hue || 0), s = e.scale || 0.5, w = a.width * s, h = a.height * s; ctx.drawImage(a, Math.round(x + 8 - w / 2), Math.round(y + 16 - h + Math.sin(F.frame / 20) * 2), w, h); break; }
+    case 'boss': { const a = enemyArt(e.art, e.hue || 0), s = a.fs ? fine(30 / a.height) : e.scale || 0.5, w = a.width * s, h = a.height * s; ctx.drawImage(a, Math.round(x + 8 - w / 2), Math.round(y + 16 - h + Math.sin(F.frame / 20) * 2), w, h); break; }
     case 'pipe': ctx.drawImage(pipeArt(e.shape, e.rot, !!e.lit, (F.frame >> 3) % 2, !!e.fixed), x, y); break;
     case 'source': ctx.drawImage(sourceArt((F.frame >> 2) % 3), x, y - 4); break;
     case 'sink': ctx.drawImage(sinkArt(!!e.lit, (F.frame >> 3) % 2), x, y - 4); break;

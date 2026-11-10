@@ -230,7 +230,7 @@ MAPS.metro = {
       e: { k: 'concrete', e: (x, y, n) => ({ type: 'enemy', n, troop: ['m1', 'm2'][n], art: n ? 'bat' : 'rat', hx: x, hy: y, range: 5, sight: 4 }) },
       g: { k: 'concrete', e: (x, y, n) => (n === 0 ? { type: 'gate', group: 9, flag: 'boss1' } : { type: 'gate', group: n + 1 }) },
       '@': { k: 'concrete', e: { type: 'save' } },
-      B: { k: 'concrete', e: { type: 'boss', id: 'worm', art: 'serpent', hue: 300, scale: 0.9, talk: 'mt_worm', cond: (f) => !f.boss1 } },
+      B: { k: 'concrete', e: { type: 'boss', id: 'worm', art: 'worm', scale: 0.9, talk: 'mt_worm', cond: (f) => !f.boss1 } },
       T: { k: 'concrete', e: { type: 'trigger', run: 'mt_worm', once: 'wormSeen' } },
       Q: { k: 'pod', e: { type: 'solid', talk: 'mt_pod' } },
     }, { id: 'metro', dark: 0.9 });
@@ -311,7 +311,7 @@ MAPS.neon = {
       e: { k: 'asphalt', e: (x, y, n) => ({ type: 'enemy', n, troop: ['n1', 'n2'][n], art: n ? 'drone' : 'brigand', hue: n ? 120 : 0, hx: x, hy: y, range: 5, sight: 5 }) },
       g: { k: 'asphalt', e: (x, y, n) => (n === 0 ? { type: 'gate', group: 9, flag: 'boss2' } : { type: 'gate', group: 2 }) },
       '@': { k: 'asphalt', e: { type: 'save' } },
-      B: { k: 'concrete', e: { type: 'boss', id: 'neonking', art: 'golem', hue: 250, scale: 0.6, talk: 'nc_boss', cond: (f) => !f.boss2 } },
+      B: { k: 'concrete', e: { type: 'boss', id: 'neonking', art: 'neonking', scale: 0.6, talk: 'nc_boss', cond: (f) => !f.boss2 } },
       T: { k: 'concrete', e: { type: 'trigger', run: 'nc_boss', once: 'neonSeen' } },
     }, { id: 'neon', tint: 'rgba(30,0,60,0.25)' });
     // two lines run from one generator: both receivers must light to open the old plaza
@@ -362,7 +362,7 @@ MAPS.glass = {
       $: { k: 'glass', e: (x, y, n) => ({ type: 'chest', id: 'gl' + n, item: ['titanaxe', 'wardcharm'][n] }) },
       e: { k: 'glass', e: (x, y, n) => ({ type: 'enemy', n, troop: ['g1', 'g2'][n], art: n ? 'serpent' : 'crab', hue: n ? 40 : 150, hx: x, hy: y, range: 5, sight: 5 }) },
       '@': { k: 'glass', e: { type: 'save' } },
-      B: { k: 'glass', e: { type: 'boss', id: 'scorpion', art: 'crab', hue: 300, scale: 0.8, talk: 'gl_boss', cond: (f) => !f.boss3 } },
+      B: { k: 'glass', e: { type: 'boss', id: 'scorpion', art: 'scorpion', scale: 0.8, talk: 'gl_boss', cond: (f) => !f.boss3 } },
       T: { k: 'glass', e: { type: 'trigger', run: 'gl_boss', once: 'scorpSeen' } },
     }, { id: 'glass', tint: 'rgba(0,40,40,0.12)' });
     for (const x of [16, 17, 18]) m.ents.push({ ...warp('world', 31, 28, 'd', { exit: true }), x, y: 24 });
@@ -408,7 +408,7 @@ MAPS.cathedral = {
       e: { k: 'tfloor', e: (x, y, n) => ({ type: 'enemy', n, troop: ['c1', 'c2', 'c3', 'c4'][n], art: n % 2 ? 'gargoyle' : 'brigand', hue: n % 2 ? 180 : 200, hx: x, hy: y, range: 4, sight: 5 }) },
       g: { k: 'tcarpet', e: (x, y, n) => (n === 0 ? { type: 'gate', group: 5, flag: 'caSanctum' } : { type: 'gate', group: n }) },
       '@': { k: 'tfloor', e: { type: 'save' } },
-      B: { k: 'tfloor', e: { type: 'boss', id: 'bishop', art: 'knight', hue: 30, scale: 0.7, talk: 'ca_boss', cond: (f) => !f.boss4 } },
+      B: { k: 'tfloor', e: { type: 'boss', id: 'bishop', art: 'bishop', scale: 0.7, talk: 'ca_boss', cond: (f) => !f.boss4 } },
       T: { k: 'tfloor', e: { type: 'trigger', run: 'ca_boss', once: 'bishopSeen' } },
     }, { id: 'cathedral', tint: 'rgba(40,10,20,0.16)' });
     // two side chapels each hold a generator: light both receivers by the altar to open the sanctum
@@ -457,7 +457,7 @@ MAPS.vault = {
       $: { k: 'ice', e: { type: 'chest', id: 'va0', item: 'elixir' } },
       e: { k: 'metal', e: (x, y, n) => ({ type: 'enemy', n, troop: ['v1', 'v2', 'v3', 'v1'][n], art: n % 2 ? 'wolf' : 'yeti', hue: n % 2 ? 180 : 0, hx: x, hy: y, range: 4, sight: 5 }) },
       '@': { k: 'metal', e: { type: 'save' } },
-      B: { k: 'metal', e: { type: 'boss', id: 'cradle', art: 'core', scale: 0.5, talk: 'va_boss', cond: (f) => !f.boss5 } },
+      B: { k: 'metal', e: { type: 'boss', id: 'cradle', art: 'cradle', scale: 0.5, talk: 'va_boss', cond: (f) => !f.boss5 } },
       T: { k: 'metal', e: { type: 'trigger', run: 'va_boss', once: 'cradleSeen' } },
     }, { id: 'vault', tint: 'rgba(120,180,255,0.12)' });
     // the enemies on the ice slide too, so mark them as standing on ice

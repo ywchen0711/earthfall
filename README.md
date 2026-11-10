@@ -17,7 +17,7 @@ The journey runs in four movements:
 - **轉** The "god" of the Iron Cathedral turns out to be Cradle, the station's mind. Dr. Rei uploaded herself into it, and three hundred years alone have bent it.
 - **合** At the Seed Vault in the frozen north, a mother and her second daughter meet again.
 
-The world, characters, story, art and music are all original.
+The world, characters, story and music are original. The monster sprites are by Antifarea, Redshrike, Blarumyrran, LordNeo and Balmer (CC-BY 3.0) and Atrus/Scrittl (CC0); see [CREDITS.md](CREDITS.md).
 
 ## How it plays
 
@@ -28,7 +28,7 @@ The world, characters, story, art and music are all original.
   - Turn-based, front view, with a command for each of the four heroes.
   - Each hero has a gauge that fills in battle; when it is full they can use a special move.
   - Gadgets and spells cost EP.
-  - Monsters are hand-drawn pixel art, with fixed stats that never scale with your level.
+  - Monsters are 16-bit sprites by other pixel artists, drawn small and fine with your screen's real pixels. Their stats are fixed and never scale with your level.
 - **The party:**
   - 朔 Saku, a scavenger with a blade;
   - 蘭 Ran, a mechanic with nail guns and gadget bombs;
@@ -50,7 +50,7 @@ Switch between Chinese and English on the title screen or in Config.
 - `js/story.js` holds every scene and conversation.
 - `js/maps.js` holds every place, from the station to the Seed Vault, and the conduit puzzles.
 - `js/field.js` handles walking, conduits, gates and visible monsters.
-- `js/pixmon.js` holds the hand-drawn monsters.
+- `js/sheet.js` cuts the monster sprites out of `assets/monsters.png`; `js/pixmon.js` keeps the older hand-drawn monsters as a fallback.
 - `js/tiles.js` draws the station, ruins, rails, carriages and glass desert.
 - `js/battle.js` and `js/rules.js` contain the battles and their maths.
 - `js/data.js` holds the heroes, gear and monsters.
