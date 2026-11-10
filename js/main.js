@@ -92,6 +92,19 @@ const E = {
   async resetPuzzle() { await trans('out', 12); loadMap(S.map, F.p.x, F.p.y, F.p.dir); F.banner = 0; await trans('in', 12); },
   async reloadWorld() { await trans('out', 20); loadMap('world', F.p.x, F.p.y, F.p.dir); await trans('in', 30); },
   ending: () => ending(),
+  async toPresent() {
+    await trans('out', 60, '#ffffff');
+    T.col = '#ffffff';
+    S.members.length = 0; addMember('saku'); S.gold = 60;
+    for (const id of Object.keys(S.inv)) delete S.inv[id];
+    S.inv.herb = 3;
+    loadMap('railtown', 36, 14, 'l'); F.banner = 0;
+    playMusic('town');
+    await trans('in', 60, '#ffffff');
+    T.col = '#000';
+    await SCRIPTS.opening(E);
+  },
+  async reload() { await trans('out', 16, '#ffffff'); loadMap(S.map, F.p.x, F.p.y, F.p.dir); F.banner = 0; T.col = '#ffffff'; await trans('in', 30, '#ffffff'); T.col = '#000'; },
   // cutscene helpers
   night(tint) { F.map.tint = tint === undefined ? 'rgba(8,16,64,0.42)' : tint; },
   solo(on) { F.solo = on; },
@@ -128,7 +141,7 @@ F.onEncounter = async (zone) => {
 };
 F.onTouchEnemy = async (foe) => {
   F.busy = true;
-  const r = await runBattle(TROOPS[foe.troop], { bg: F.def === MAPS.cave1 || F.def === MAPS.cave2 ? 'cave' : 'tower' });
+  const r = await runBattle(TROOPS[foe.troop], { bg: ['metro', 'glass'].includes(S.map) ? 'cave' : 'tower' });
   if (r === 'win') foe.gone = true;
   else { foe.stun = 4; }
   F.busy = false;
@@ -238,12 +251,14 @@ function drawTitle() {
   for (let i = 0; i < 6; i++) { const x = ((i * 53 - t * 0.15) % 300 + 300) % 300 - 30, y = 20 + (i * 17) % 40; ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillRect(x, y, 30 + (i % 3) * 10, 3); ctx.fillRect(x + 6, y - 2, 18, 2); }
   // a falling star now and then
   { const k = t % 360; if (k < 40) { const fx = 40 + k * 4, fy = 6 + k * 1.4; for (let i = 0; i < 10; i++) { ctx.fillStyle = `rgba(255,248,200,${1 - i / 10})`; ctx.fillRect(Math.round(fx - i * 3), Math.round(fy - i * 1.05), 2, 1); } ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(fx), Math.round(fy), 2, 2); } }
-  // the spire on the horizon
-  const sx = 186;
-  ctx.fillStyle = '#4a5878'; ctx.fillRect(sx - 4, horizon - 52, 8, 52); ctx.fillRect(sx - 7, horizon - 20, 14, 20); ctx.fillRect(sx - 2, horizon - 62, 4, 10);
-  ctx.fillStyle = '#6878a0'; ctx.fillRect(sx - 4, horizon - 52, 2, 52);
-  if ((t >> 4) % 2) { ctx.fillStyle = '#80fff0'; ctx.fillRect(sx - 1, horizon - 40, 2, 2); }
-  const ang = -Math.PI / 2 + Math.sin(t / 900) * 0.35, cx = 384 + Math.cos(t / 700) * 90, cy = 1100 - (t * 0.3) % 1000;
+  // the broken towers of the old world on the horizon, and the dead station still crossing the sky
+  for (const [x, w, hh, cut] of [[8, 14, 34, 6], [26, 10, 22, 0], [40, 18, 46, 10], [64, 12, 28, 4], [150, 16, 40, 8], [170, 10, 26, 0], [184, 20, 52, 12], [210, 12, 30, 5], [228, 16, 38, 0]]) {
+    ctx.fillStyle = '#3a4458'; ctx.fillRect(x, horizon - hh, w, hh); ctx.fillStyle = '#4c5870'; ctx.fillRect(x, horizon - hh, 2, hh);
+    if (cut) { ctx.fillStyle = '#5868a0'; ctx.fillRect(x + w - cut, horizon - hh, cut, cut); }
+    for (let wy = horizon - hh + 4; wy < horizon - 4; wy += 6) for (let wx = x + 3; wx < x + w - 2; wx += 4) if (((wx * 7 + wy * 3) % 11) === 0) { ctx.fillStyle = (t >> 5) % 2 ? '#f0d070' : '#c0a050'; ctx.fillRect(wx, wy, 1, 2); }
+  }
+  { const sx = (t * 0.25) % (W + 40) - 20; ctx.fillStyle = '#c8d0e0'; ctx.fillRect(Math.round(sx), 30, 5, 2); ctx.fillRect(Math.round(sx) + 2, 28, 1, 6); if ((t >> 4) % 2) { ctx.fillStyle = '#f04040'; ctx.fillRect(Math.round(sx) + 2, 30, 1, 1); } }
+  const ang = -Math.PI / 2 + Math.sin(t / 900) * 0.35, cx = 400 + Math.cos(t / 700) * 120, cy = 620 - (t * 0.25) % 420;
   ctx.drawImage(mode7(cx, cy, ang, horizon, t), 0, 0);
   // logo
   if (isEn()) {
@@ -268,39 +283,31 @@ function drawTitle() {
 
 // ---------- prologue ----------
 const PROLOGUE_ZH = [
-  '十年前的某個夜晚，',
-  '一顆星星墜入了東方的海中。',
-  '巡守隊長雷昂出海查看，',
-  '從此再也沒有回來。',
+  '西元2091年。',
   '',
-  '十年後，同樣的星光再次劃過夜空。',
-  '這一次，它落在了北方的礦坑。',
+  '直徑十二公里的小行星「終焉」，',
+  '正朝著地球墜落。',
   '',
-  '從星星裡傳出的，',
-  '是一個女孩的哭聲──',
-  '',
-  '「好冷……救救我。」',
+  '人類最後的希望，',
+  '是漂浮在軌道上的研究站──',
+  '「搖籃號」。',
 ];
 const PROLOGUE_EN = [
-  'Ten years ago, one night,',
-  'a star fell into the eastern sea.',
-  'Leon, captain of the watch, sailed out',
-  'to see it, and never came home.',
+  'AD 2091.',
   '',
-  'Ten years later, the same light',
-  'crossed the sky. This time it fell',
-  'into the old mine in the north.',
+  'Finis, an asteroid twelve kilometres wide,',
+  'is falling toward the Earth.',
   '',
-  'And from inside the star came',
-  'the sound of a girl crying...',
-  '"It\'s so cold... help me."',
+  "Humanity's last hope",
+  'is a research station in orbit:',
+  'Cradle.',
 ];
 const prologue = () => (isEn() ? PROLOGUE_EN : PROLOGUE_ZH);
 const intro = { t: 0 };
 async function newGame() {
   await trans('out', 30);
   reset();
-  addMember('kai');
+  addMember('rei');
   scene = 'intro'; intro.t = 0;
   T.dark = 0;
 }
@@ -313,10 +320,10 @@ function updateIntro() {
       await trans('out', 30);
       intro.leaving = false;
       scene = 'field';
-      loadMap('renhouse', 4, 4, 'r');
-      playMusic('town');
+      loadMap('cradle', 5, 7, 'u');
+      playMusic('tower');
       await trans('in', 30);
-      F.runScript('opening');
+      F.runScript('cr_intro');
     })();
   }
 }
@@ -366,53 +373,20 @@ function drawOver() {
 async function ending() {
   await trans('out', 60, '#ffffff');
   T.col = '#ffffff';
-  loadMap('town', 19, 24, 'u');
+  loadMap('railtown', 20, 12, 'd');
   F.banner = 0;
   for (const e of F.ents) if (e.type === 'npc') e.gone = true;
-  F.solo = true;
   const npc = (id, sp, x, y, dir) => E.spawn({ type: 'npc', id, sprite: sp, x, y, dir });
-  const nia = npc('e_nia', 'nia', 18, 24, 'u'), bart = npc('e_bart', 'barton', 20, 24, 'u');
-  npc('e_fisher', 'fisher', 21, 27, 'u'); npc('e_mayor', 'elder', 17, 22, 'd'); const mom = npc('e_mom', 'mom', 22, 21, 'd');
-  const girl = npc('e_girl', 'girl', 24, 23, 'l');
-  playMusic('town');
+  npc('e_tess', 'elder', 18, 13, 'r'); npc('e_kid', 'boy', 22, 11, 'l'); npc('e_kid2', 'girl', 23, 13, 'l'); npc('e_vey', 'vey', 17, 11, 'd');
+  F.map.tint = 'rgba(80,160,255,0.08)';
+  playMusic('ending', { restart: true });
   await trans('in', 60, '#ffffff');
   T.col = '#000';
   await wait(30);
-  await say(null, L('──三天後，望星港。', '── Three days later, Starwatch Harbour.'));
-  await say('巴頓', L('……我划回來了。這一次，我划回來是對的。', "...I rowed back. And this time, rowing back was right."));
-  await say('老漁夫', L('看哪！海上……是船！失蹤的船全都回來了！', 'Look! Out at sea... Ships! All the lost ships are coming home!'));
-  const dad = npc('e_dad', 'sailor', 19, 28, 'u');
-  await wait(20);
-  await walkEnt(dad, 'uu');
-  await say('小女孩', L('爸爸──！', 'Papa──!'));
-  await walkEnt(girl, 'ld');
-  await say('漁夫', L('……我做了一個好長的夢。夢裡有個銀色頭髮的女孩對我唱歌：「回家吧，有人在等你。」', '...I had a long, long dream. A girl with silver hair sang to me: "Go home. Someone is waiting for you."'));
-  await say('妮雅', L('……艾歐。', '...Io.'));
-  await say('村長', L('凱，還有各位。望星港欠你們，也欠雷昂，一份永遠還不清的恩情。', 'Kai, and all of you. Starwatch owes you, and Leon, a debt it can never repay.'));
-  await walkEnt(mom, 'ddl');
-  await say('母親', L('……歡迎回來，凱。', '...Welcome home, Kai.'));
-  await say('凱', L('媽……爸爸要我告訴妳。他說，那天晚上的星星，真的很美。', 'Mum... Dad asked me to tell you. He said the stars that night were truly beautiful.'));
-  await wait(50);
-  await say('母親', L('……是嗎。那個人啊……真是的。', '...Is that so. That man... honestly.'));
-  await say('母親', L('來，粥煮好了。還是熱的喔。', "Come on, the porridge is ready. It's still warm."));
-  await say('凱', L('……我回來了。在粥涼之前。', "...I'm home. Before the porridge cooled."));
-  await trans('out', 40);
-  F.map.tint = 'rgba(8,16,64,0.5)';
-  for (const e of [mom, girl, dad]) e.gone = true;
-  nia.dir = 'r'; bart.dir = 'l';
-  playMusic('io', { restart: true });
-  await trans('in', 40);
-  await say(null, L('──那天夜裡。', '── That night.'));
-  await say('妮雅', L('晚安，艾歐。今天，港口的大家都回家了喔。', "Good night, Io. Today, everyone in the harbour came home."));
-  nia.dir = 'u';
+  F.busy = true;
+  try { await SCRIPTS.epilogue(E); } catch (err) { console.error(err); }
+  F.busy = false;
   await wait(40);
-  sfx('holy'); E.flash('#c0f8ff', 20);
-  await say(null, L('一直靜止不動的星盤，忽然轉了一圈，指向東方的海，發出溫柔的光。', 'The starwheel, still for days, suddenly turns once, points to the eastern sea, and glows softly.'));
-  await say('艾歐', L('……晚安，妮雅。早安，凱。', '...Good night, Nia. Good morning, Kai.'));
-  await say('艾歐', L('我還在這裡，在星海的底下，和薇拉一起。請好好地，過完你們每一個明天。', 'I am still here, beneath the sea of stars, with Vera. Please live every one of your tomorrows.'));
-  await say('凱', L('……嗯。我們會等妳的，艾歐。', "...Yeah. We'll be waiting for you, Io."));
-  await wait(60);
-  F.solo = false;
   await trans('out', 60);
   scene = 'credits'; credits.t = 0;
   playMusic('ending', { restart: true });
@@ -421,20 +395,22 @@ async function ending() {
 }
 const CREDITS_ZH = [
   ['星墜地球記', 'big'], [''], ['EARTHFALL CHRONICLE'], [''], [''],
-  ['— 登場人物 —', 'y'], ['凱　　望星港的見習兵'], ['妮雅　聽得見星星聲音的女孩'], ['巴頓　老兵，雷昂的副隊長'], ['艾歐　星星的孩子'], [''],
-  ['雷昂　巡守隊長'], ['薇拉　方舟的使者'], [''], ['母親　村長　老漁夫　小女孩'], ['守衛　旅店老闆　修女'], ['望星港的人們'], [''], [''],
-  ['— 魔物 —', 'y'], ['星凝膠　鐵喙鳥　角兔　隕孢菇'], ['回音蝙蝠　隕殼蟹　礦坑亡骸'], ['方舟哨兵　電漿火　守門石像'], ['鋼鱗海蛇　機鉗蟹王'], ['鐵騎士'], ['方舟核心 伊吉斯'], [''], [''],
+  ['— 登場人物 —', 'y'], ['朔　　鐵軌鎮的拾荒者'], ['蘭　　機械師'], ['老齒輪　退役的教團騎士'], ['露米　種子守護機'], [''],
+  ['玲博士　搖籃號的植物學家'], ['薇伊　教團審問官'], ['哈爾艦長　工程師小野'], ['泰絲婆婆　瑪格婆婆'], ['鐵軌鎮與風車村的人們'], [''], [''],
+  ['— 星墜後的生物 —', 'y'], ['鏽鼠　灰鴉　噬人草　哨戒機'], ['晶殼鼠　隧道蝙蝠　電火花'], ['廢墟掠奪者　廢鐵兵　武裝無人機'], ['玻璃蟹　沙鰻　晶石魔像'], ['教團騎士　鋼之天使　凍原巨獸　鐵狼'], [''],
+  ['地鐵巨蟲'], ['霓虹巨像'], ['晶蠍女王'], ['鐵之主教'], ['搖籃'], [''], [''],
   ['故事、畫面、音樂'], ['全部以程式碼繪製與合成'], [''], ['字型：俐方體11號 (Cubic 11)'], [''], [''],
-  ['東方的海底，'], ['兩顆星星並肩沉睡著。'], ['總有一天，'], ['她們會在某個早晨醒來。'], [''], [''],
+  ['天空變藍了。'], ['一千兩百萬顆種子，'], ['正在世界的每個角落發芽。'], [''], [''],
   ['感謝你的遊玩！', 'y'], [''], [''], ['—— 完 ——', 'big'],
 ];
 const CREDITS_EN = [
   ['EARTHFALL', 'big'], [''], ['CHRONICLE', 'big'], [''], ['星墜地球記'], [''], [''],
-  ['- CAST -', 'y'], ['Kai - a young cadet of Starwatch'], ['Nia - the girl who hears the stars'], ['Barton - veteran, Leon\'s second'], ['Io - a child of the stars'], [''],
-  ['Leon - captain of the watch'], ['Vera - envoy of the Ark'], [''], ['Mother   The Mayor   Old Fisher'], ['The Girl   Guard   Innkeeper   Sister'], ['and the people of Starwatch'], [''], [''],
-  ['- MONSTERS -', 'y'], ['Star Jelly   Ironbeak   Horn Hare'], ['Meteor Shroom   Echo Bat'], ['Starshell Crab   Mine Wraith'], ['Ark Sentry   Plasma Wisp'], ['Gate Golem   Steelscale'], ['Clawcrusher'], ['The Iron Knight'], ['Aegis, the Ark Core'], [''], [''],
+  ['- CAST -', 'y'], ['Saku - scavenger of Railtown'], ['Ran - mechanic'], ['Old Gears - a church knight who deserted'], ['Lumi - seed keeper'], [''],
+  ['Dr. Rei - botanist of Cradle'], ['Vey - inquisitor of the church'], ['Captain Hale   Engineer Ono'], ['Granny Tess   Granny Mag'], ['and the people of Railtown and the Windfarm'], [''], [''],
+  ['- LIFE AFTER THE EARTHFALL -', 'y'], ['Rust Rat   Ash Crow   Snapweed'], ['Sentry Drone   Crystal Rat   Tunnel Bat'], ['Live Spark   Ruin Raider   Scrap Soldier'], ['Gun Drone   Glass Crab   Sand Eel'], ['Crystal Golem   Church Knight   Steel Angel'], ['Tundra Beast   Iron Wolf'], [''],
+  ['The Metro Worm'], ['The Neon Colossus'], ['The Crystal Scorpion Queen'], ['The Iron Bishop'], ['Cradle'], [''], [''],
   ['Story, art and music'], ['all made in code'], [''], ['Font: Cubic 11'], [''], [''],
-  ['Beneath the eastern sea,'], ['two stars sleep side by side.'], ['One day, some morning,'], ['they will wake.'], [''], [''],
+  ['The sky is blue again.'], ['Twelve million seeds'], ['are sprouting all over the world.'], [''], [''],
   ['THANK YOU FOR PLAYING!', 'y'], [''], [''], ['THE END', 'big'],
 ];
 const creditList = () => (isEn() ? CREDITS_EN : CREDITS_ZH);
@@ -522,5 +498,5 @@ boot();
 
 // debugging hooks for automated checks
 G.T = T; G._B = _B; G.UI = UI; G.newGame = newGame; G.continueGame = continueGame; G.loadMap = loadMap; G.trans = trans; G.runBattle = runBattle; G.E = E; G.addMember = addMember; G.stats = stats;
-G.go = (map, x, y) => { scene = 'field'; T.dark = 0; loadMap(map, x, y, 'd'); playMusic(MAPS[map].music); };
+G.go = (map, x, y) => { scene = 'field'; T.dark = 0; if (x === undefined) { const m = MAPS[map].build(S.flags); [x, y] = m.entry || [Math.floor(m.w / 2), m.h - 2]; } loadMap(map, x, y, 'd'); playMusic(MAPS[map].music); };
 void menu; void notice; void currentSong; void fromGrid;

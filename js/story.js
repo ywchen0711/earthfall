@@ -1,430 +1,397 @@
 // Story scripts for 星墜地球記 Earthfall Chronicle. Each one is async and gets E, the toolbox main.js
-// hands over (say, battle, warp ...). Every line is written as L('中文', 'English').
-import { ITEMS, SHOPS, TROOPS } from './data.js';
+// hands over. Every line is written as L('中文', 'English').
+import { ITEMS, SHOPS } from './data.js';
 import { S } from './party.js';
 import { L } from './i18n.js';
 
-// a companion stands up as an NPC for a cutscene
-const actor = (E, id, x, y, dir) => E.spawn({ type: 'npc', id: 'a_' + id, sprite: id, x, y, dir });
+const actor = (E, id, x, y, dir, sprite = id) => E.spawn({ type: 'npc', id: 'a_' + id, sprite, x, y, dir });
 
 export const SCRIPTS = {
-  // ---------- generic objects ----------
+  // ---------- generic ----------
   async chest(E, e) {
-    if (e.open) { await E.say(null, L('寶箱是空的。', 'The chest is empty.')); return; }
+    if (e.open) { await E.say(null, L('箱子是空的。', 'The crate is empty.')); return; }
     e.open = true; S.flags['chest:' + e.id] = true;
     E.sfx('chest');
-    if (e.gold) { S.gold += e.gold; await E.say(null, L(`得到了 ${e.gold} 金幣！`, `Found ${e.gold} gold!`)); return; }
-    E.give(e.item, e.n || 1, true);
-    await E.say(null, L(`得到了${ITEMS[e.item].name}${e.n > 1 ? '×' + e.n : ''}！`, `Found ${e.n > 1 ? e.n + ' × ' : ''}${ITEMS[e.item].name}!`));
+    if (e.gold) { S.gold += e.gold; await E.say(null, L(`找到了 ${e.gold} 枚零件幣！`, `Found ${e.gold} scrap coins!`)); return; }
+    E.give(e.item, e.n || 1);
+    await E.say(null, L(`找到了${ITEMS[e.item].name}！`, `Found ${ITEMS[e.item].name}!`));
   },
   async save(E) {
     E.heal(); E.sfx('heal');
-    const r = await E.ask(null, L('星光水晶溫柔地閃爍，體力和魔力都恢復了。\n要記錄目前的冒險嗎？', 'The star crystal glimmers softly. HP and MP are restored.\nSave your adventure?'), [L('記錄', 'Save'), L('不用', 'No')]);
+    const r = await E.ask(null, L('舊世界的醫療艙還在運作。大家的傷都好了。\n要記錄目前的旅程嗎？', 'An old-world med pod still hums. Everyone is patched up.\nSave your journey?'), [L('記錄', 'Save'), L('不用', 'No')]);
     if (r === 0) { E.save(); E.sfx('save'); await E.say(null, L('記錄完成。', 'Saved.')); }
   },
-  async spring(E) { E.heal(); E.sfx('heal'); await E.say(null, L('清涼的泉水讓大家恢復了精神。', 'The cool spring water refreshes everyone.')); },
-  async resetStone(E) {
-    const r = await E.ask(null, L('一塊微微發光的石頭。\n要讓這裡的石塊回到原位嗎？', 'A faintly glowing stone.\nPut the blocks in this room back?'), [L('恢復原位', 'Reset'), L('不用', 'No')]);
-    if (r === 0) await E.resetPuzzle();
+
+  // ---------- 序: the orbital station Cradle, AD 2091 ----------
+  async cr_intro(E) {
+    E.music(null);
+    E.sfx('quake'); E.shake(30);
+    await E.wait(30);
+    await E.say(null, L('──西元2091年，軌道站「搖籃號」。\n距離小行星「終焉」撞上地球，還有四十分鐘。', '── AD 2091, orbital station Cradle.\nForty minutes until the asteroid "Finis" strikes the Earth.'));
+    await E.say(null, L('警報聲響個不停。你是這座站上的植物學家──玲博士。', 'The alarms will not stop. You are the station\'s botanist, Dr. Rei.'));
+    E.music('tower');
+  },
+  async cr_hale(E) {
+    if (S.flags.crDone) return;
+    await E.talk('哈爾艦長', L('博士，地球防衛的最後一發飛彈也沒能攔下它。', 'Doctor, the last interceptor missed. Nothing can stop it now.'), L('我們回不去了。站上的燃料，只夠讓一個逃生艙穿過大氣層。', "We can't go home. There's only fuel enough to drop a single pod through the atmosphere."));
+    await E.say('哈爾艦長', L('全體船員投票決定了：那個逃生艙，要給妳的「種子方舟」。去吧，妳只剩不到半小時。', "The crew voted. That pod goes to your Seed Ark. Go on. You have less than half an hour."));
+    S.flags.crHale = true;
+  },
+  async cr_ono(E) {
+    await E.say('工程師小野', S.flags.crHale ? L('博士，逃生艙在右邊的艙室。我已經把導航設定成「等到天空變藍才喚醒」……三百年都有可能喔。', "Doctor, the pod is in the bay to the right. I set the guidance to wake only when the sky turns blue again... that could take three hundred years.") : L('艦長在左邊的艦橋找妳。', 'The captain wants you on the bridge, to the left.'));
+  },
+  async cr_console(E) { await E.say(null, L('螢幕上，一顆巨大的岩石正一點一點地靠近藍色的星球。', 'On the screen, an enormous rock creeps closer and closer to the blue planet.')); },
+  async cr_window(E) { await E.say(null, L('窗外是地球。雲在轉，海在發光。……這是最後一次看見它這個樣子了。', 'Through the window, the Earth. Clouds turning, oceans shining. ...The last time it will ever look like this.')); },
+  async cr_pod(E) { await E.say(null, L('其他逃生艙已經空了。燃料都轉到了中央那一個。', 'The other pods are empty. All their fuel went to the one in the middle.')); },
+  async cr_lumi(E, e) {
+    if (!S.flags.crHale) { await E.say('露米', L('媽媽！警報好吵喔。艦長叔叔在找妳喔。', 'Mama! The alarms are so loud. The captain is looking for you.')); return; }
+    await E.talk('露米', L('媽媽，我們要回家了嗎？回到地球上？', 'Mama, are we going home? Back to Earth?'));
+    await E.say('玲', L('……露米。妳要回家了。只是，媽媽不能陪妳。', '...Lumi. You are going home. But Mama cannot come with you.'));
+    await E.say('露米', L('為什麼？', 'Why not?'));
+    await E.talk('玲', L('妳的身體裡，裝著地球上所有植物的種子。一共一千兩百萬種。', 'Inside you are the seeds of every plant on Earth. Twelve million kinds.'),
+      L('撞擊之後，地球會很久很久都是灰色的。等天空再變藍，妳就醒過來，把它們種下去。', 'After the impact, the Earth will be grey for a long, long time. When the sky turns blue again, wake up and plant them.'),
+      L('讓地球，再變回一座花園。', 'Make the Earth a garden again.'));
+    await E.say('露米', L('媽媽也要一起種！小空也是！我們說好了要一起看花田的！', 'You have to plant them too! And Sora! We promised to see the flower fields together!'));
+    await E.say('玲', L('……小空在天上看著喔。媽媽會留在這裡，用站上的護盾替妳擋住碎片。', '...Sora is watching from the sky. Mama will stay here and turn the station\'s shield to keep the debris off you.'));
+    await E.say('玲', L('露米，記住：等天空變藍。', 'Lumi, remember: wait until the sky is blue.'));
+    E.removeEnt(e);
+    E.sfx('warp'); E.flash('#c0f8ff', 30);
+    await E.say(null, L('小小的逃生艙離開了搖籃號，朝著地球落了下去。', 'The little pod leaves Cradle and falls toward the Earth.'));
+    E.music(null);
+    E.sfx('boom'); E.shake(80); E.flash('#ffffff', 60);
+    await E.wait(60);
+    await E.say('玲', L('……再見了，我的孩子。', '...Goodbye, my child.'));
+    S.flags.crDone = true;
+    await E.toPresent();
   },
 
-  // ---------- 起: the night the star falls ----------
+  // ---------- 起: Railtown, three hundred years later ----------
   async opening(E) {
-    await E.wait(40);
-    const mom = E.ent('mom');
-    await E.walk(mom, 'l');
-    await E.talk('母親',
-      L('凱，你也醒了？……你也看到了吧，剛才那顆流星。', "Kai, you're awake too? ...You saw it, didn't you. That falling star."),
-      L('十年前，也是這樣的夜晚。一顆星星掉進了東邊的海裡，你父親帶著巡守隊出海去看……', 'Ten years ago, on a night just like this, a star fell into the eastern sea. Your father took the watch out on a boat to see it...'),
-      L('他出門前說：「粥涼之前我就回來。」', 'Before he left, he said, "I\'ll be back before the porridge cools."'));
-    await E.say('凱', L('……我記得。那天晚上，我在碼頭等到天亮。', '...I remember. I waited on the pier until morning.'));
-    await E.say('母親', L('這是你父親的星盤。他失蹤一個月後，被浪沖上了沙灘。十年來，指針一直指著東方的海……', "This is your father's starwheel. It washed up on the beach a month after he vanished. For ten years, its needle has pointed at the eastern sea..."));
-    E.give('tidekey', 1); E.sfx('chest');
-    await E.say(null, L('得到了父親的星盤！', "Received Father's Starwheel!"));
-    await E.say('母親', L('可是今晚，它第一次轉向了北方。', 'But tonight, for the first time, it turned to the north.'));
-    await E.say('母親', L('村長在召集巡守隊。去吧，見習兵大人。……不過，一定要回來喔。', 'The mayor is calling up the watch. Go on, little cadet. ...But you come back to me.'));
-    await E.say('凱', L('我答應妳，媽。粥涼之前我就回來。', "I promise, Mum. I'll be back before the porridge cools."));
-    await E.say('母親', L('……你這孩子，跟他說一模一樣的話。', '...Oh, you. Those are his exact words.'));
-    await E.walk(mom, 'r');
+    await E.wait(20);
+    await E.say(null, L('──三百年後。\n小行星撞擊後的地球，被稱為「星墜後的世界」。', '── Three hundred years later.\nThe Earth after the impact is called the world after the Earthfall.'));
+    E.solo(true);
+    const tess = E.ent('tess') || actor(E, 'tess', 34, 14, 'r', 'elder');
+    const ran = actor(E, 'ran', 35, 12, 'd', 'ran');
+    const k1 = actor(E, 'k1', 38, 13, 'l', 'cknight'), k2 = actor(E, 'k2', 38, 15, 'l', 'cknight');
+    tess.x = 34; tess.y = 14; tess.px = 34 * 16; tess.py = 14 * 16; tess.dir = 'r';
+    await E.say('教團騎士', L('鐵軌鎮的人聽好了。這個月的什一稅：十顆星石。', 'People of Railtown, hear this. This month\'s tithe: ten starstones.'));
+    await E.say('泰絲婆婆', L('十顆……！我們連一顆都挖不到了。鐵軌下的礦脈早就空了。', 'Ten...! We cannot dig up even one. The seam under the tracks ran dry long ago.'));
+    await E.say('教團騎士', L('那就照規矩，把孩子交出來，送到大聖堂當修士。三天後，我們再來。', 'Then by the rules, you hand over the children as novices for the cathedral. We will be back in three days.'));
+    E.removeEnt(k1); E.removeEnt(k2);
+    await E.wait(20);
+    await E.say('朔', L('……婆婆，沉沒地鐵裡面有舊世界的寶物對吧？我去挖。', "...Granny, there's old-world treasure down in the Sunken Metro, right? I'll go and dig it out."));
+    await E.say('泰絲婆婆', L('傻孩子，那裡黑得連手都看不見，還有吃人的東西。', 'Foolish boy. It is so dark down there you cannot see your own hand, and there are things that eat people.'));
+    await E.say('蘭', L('黑？那就帶上我啊。我的頭燈、還有我修好的發電機零件，都派得上用場。', "Dark? Then take me. My head lamp and the generator parts I've fixed will come in handy."));
+    await E.say('朔', L('蘭……', 'Ran...'));
+    await E.say('蘭', L('別擺那種臉。我們是一起長大的，不是嗎？', "Don't make that face. We grew up together, didn't we?"));
+    E.removeEnt(ran);
+    E.solo(false);
+    E.join('ran');
+    await E.say(null, L('蘭成為了夥伴！', 'Ran joined the party!'));
+    await E.say('泰絲婆婆', L('……老齒輪在你的車廂那邊。出發前，去跟他說一聲吧。地鐵入口在鎮外的南邊。', '...Old Gears is by your carriage. Say goodbye to him before you go. The metro entrance is south of town.'));
     S.flags.start = true;
   },
-  async mom(E) {
-    if (!S.flags.mayorTalked) { await E.say('母親', L('村長家在鎮的東北邊，藍色屋頂那間。快去吧。', "The mayor's house is in the north-east of town, the one with the blue roof. Go on.")); return; }
-    if (!S.flags.key) await E.say('母親', L('巴頓那個人啊，從你父親走了以後就一直很自責……如果見到他，帶他回來吃頓飯。', 'Barton has blamed himself ever since your father was lost... If you find him, bring him home for a meal.'));
-    else if (!S.flags.tide) await E.say('母親', L('艾歐那孩子，吃粥的時候哭了呢。說是「眼睛的冷卻液漏了」。……真是個溫柔的孩子。', 'Io cried over her porridge, you know. She said her "eye coolant was leaking". ...Such a gentle child.'));
-    else if (!S.flags.seren) await E.say('母親', L('海上的那座塔……凱，不管你在那裡看到什麼，都要記得，家裡有人在等你。', 'That tower on the sea... Kai, whatever you find there, remember someone is waiting for you at home.'));
-    else await E.say('母親', L('……你的眼睛，好像哭過了。不用說，媽媽都知道。去把事情做完吧，我煮好粥等你。', "...Your eyes look like you've been crying. You don't have to tell me. Go and finish it. I'll have the porridge ready."));
-    const r = await E.ask('母親', L('要不要在家休息一下？', 'Would you like to rest for a while?'), [L('休息', 'Rest'), L('不用了', 'No thanks')]);
-    if (r === 0) await E.rest(L('好好睡吧。……早安，凱。', 'Sleep well. ...Good morning, Kai.'));
-  },
-
-  // ---------- the town ----------
-  async guard(E) {
-    if (!S.flags.mayorTalked) await E.say('守衛', L('凱！你也看到流星了嗎？村長說要先集合，在那之前誰都不能出鎮。', 'Kai! You saw the star too? The mayor wants everyone to gather first. Nobody leaves town till then.'));
-    else if (!S.flags.key) await E.say('守衛', L('舊星礦坑就在大路的盡頭，出鎮後一直往北走。巴頓大叔就拜託你了！', 'The Old Star Mine is at the end of the road, straight north out of town. Please find Barton!'));
-    else await E.say('守衛', L('你們辛苦了。鎮上就交給我吧！', 'Good work out there. Leave the town to me!'));
-  },
-  async guardBlock(E) {
-    if (S.flags.io && !S.flags.homecoming) { await SCRIPTS.homecoming(E); return; }
-    if (S.flags.mayorTalked && S.flags.nia) return;
-    const g = E.ent('guard'); g.dir = 'l';
-    if (!S.flags.mayorTalked) await E.say('守衛', L('等一下，凱！村長要巡守隊先去他家集合。', 'Hold on, Kai! The mayor wants the watch at his house first.'));
-    else await E.say('守衛', L('凱，妮雅剛才一直在找你喔。她在井邊那裡。', 'Kai, Nia was looking for you just now. She\'s over by the well.'));
-    await E.walkPlayer('d');
-  },
-  async niaTown(E, e) {
-    if (!S.flags.mayorTalked) {
-      await E.talk('妮雅', L('凱！你也看到了對不對？那顆星星……它在哭。', 'Kai! You saw it too, right? That star... it was crying.'),
-        L('我聽見了，真的。一個女孩子的聲音，一直說「好冷……救救我」。', 'I heard it, really. A girl\'s voice, saying over and over, "It\'s so cold... help me."'),
-        L('……大家都說我在做夢。可是那個聲音，到現在還在我耳朵裡。', '...Everyone says I was dreaming. But I can still hear it.'));
+  async rt_gears(E) {
+    if (!S.flags.gearsTalk) {
+      S.flags.gearsTalk = true;
+      await E.talk('老齒輪', L('要去地鐵？哼，教團那些傢伙的話，你也當真。', "Off to the metro? Hmph. You take those church dogs at their word?"), L('……拿著。這把是我年輕時用的刀，比你那根破鐵管強。', "...Take this. The blade I used when I was young. Better than that bent pipe of yours."));
+      E.give('ironsword'); E.sfx('chest');
+      await E.say(null, L('得到了開山刀！', 'Received the Machete!'));
+      await E.say('老齒輪', L('記住，在黑暗裡迷路的時候，就找有電的地方。舊世界的人，總是把路修在電線旁邊。', 'Remember: when you are lost in the dark, follow the power. The old world always built its roads beside the cables.'));
       return;
     }
-    await E.say('妮雅', L('你要去礦坑對吧？我也要去。', "You're going to the mine, aren't you? I'm coming too."));
-    await E.say('凱', L('那裡有鐵做的怪物，很危險。', "There are monsters made of iron in there. It's dangerous."));
-    await E.say('妮雅', L('小時候你說過，長大以後要帶我去看星星掉下來的地方。你忘了嗎？', "When we were little, you said that when we grew up, you'd take me to see where the stars fall. Did you forget?"));
-    await E.say('凱', L('……那是小孩子的約定。', "...That was a kid's promise."));
-    await E.say('妮雅', L('約定又沒有分大人小孩。而且……那個哭著的聲音，我想親口告訴她：「我們來了。」', 'Promises don\'t come in sizes. Besides... I want to tell that crying voice myself: "We\'re here."'));
-    E.join('nia', e);
-    await E.say(null, L('妮雅成為了夥伴！', 'Nia joined the party!'));
+    await E.say('老齒輪', L('還不快去？小鬼們的時間只剩三天了。', 'Still here? The little ones only have three days.'));
   },
-  async well(E) {
-    if (!S.flags.seren) await E.say(null, L('小時候，父親常坐在這口井邊，教你用星盤找北極星。\n「迷路的時候，就抬頭看。星星不會騙人。」', 'As a boy, you sat by this well while Father taught you to find the pole star with the starwheel.\n"When you\'re lost, look up. The stars don\'t lie."'));
-    else await E.say(null, L('井水映著天空。你抬頭看了很久。\n……星星不會騙人。', "The well water mirrors the sky. You look up for a long time.\n...The stars don't lie."));
+  async rt_ran() { /* Ran is with Saku from the opening on */ },
+  async rt_tess(E) {
+    if (S.flags.ending) return;
+    if (!S.flags.metroDone) await E.say('泰絲婆婆', L('地鐵入口在鎮外的南邊。小心點，孩子。', 'The metro entrance is south of town. Be careful, child.'));
+    else if (!S.flags.sprout) await E.say('泰絲婆婆', L('露米……妳說，妳身體裡裝著種子？我已經六十年沒看過真正的花了。北邊的風車村也許種得活。', "Lumi... you say you carry seeds? I have not seen a real flower in sixty years. Maybe they would grow at the Windfarm to the north."));
+    else if (!S.flags.cathedralDone) await E.say('泰絲婆婆', L('教團的騎士沒有再來了。聽說他們在找一個會走路的「種子機器」……孩子們，自己小心。', 'The church knights have not come back. They say they are hunting a walking "seed machine"... Be careful, all of you.'));
+    else await E.say('泰絲婆婆', L('北方的種子庫……去吧。我們會等你們回來，一起種田。', 'The Seed Vault in the north... Go. We will be waiting to plant the fields with you.'));
   },
-  async girl(E) {
-    if (!S.flags.ordath) await E.say('小女孩', L('我爸爸是漁夫。一個月前出海以後，就再也沒有回來……大家說海上有會把人吃掉的霧。爸爸一定很冷吧……', "My papa is a fisherman. He went to sea a month ago and never came back... They say there's a fog out there that swallows people. Papa must be so cold..."));
-    else await E.say('小女孩', L('爸爸回來了！謝謝你們！', 'Papa came home! Thank you!'));
-    if (!S.flags.ordath && E.has('io')) await E.say('艾歐', L('……方舟會「保管」它帶走的一切。妳的爸爸，也許只是睡著了。我答應妳，我會去找他。', '...The Ark "keeps" everything it takes. Maybe your papa is only asleep. I promise, I will go and find him.'));
+  async rt_kid(E) { await E.say('男孩', S.flags.sprout ? L('我聽說風車村開花了！花是什麼味道？', 'I heard flowers bloomed at the Windfarm! What do flowers smell like?') : L('朔哥哥，天空為什麼總是灰色的？婆婆說以前是藍色的。', 'Saku, why is the sky always grey? Granny says it used to be blue.')); },
+  async rt_kid2(E) { await E.say('小女孩', L('我不要去大聖堂當修士……去了的人，都沒有回來過。', "I don't want to be a novice at the cathedral... Nobody who goes there ever comes back.")); },
+  async rt_digger(E) { await E.say('拾荒者', L('星石是星墜時掉下來的碎片，會發光、會發熱。教團說那是神的恩賜……我看是神的帳單。', 'Starstones are shards from the Earthfall. They glow and give heat. The church calls them a gift from god... I call them god\'s bill.')); },
+  async rt_cook(E) { await E.say('廚娘', L('今天的湯又是罐頭和苔蘚。唉，要是能種點真正的蔬菜就好了。', 'Soup today is tins and moss again. Oh, if only we could grow real vegetables.')); },
+  async rt_watch(E) { await E.say('守望者', L('出了東邊的缺口就是舊高速公路。往南是地鐵，往北是風車村。', 'Through the gap in the east wall lies the old highway. South for the metro, north for the Windfarm.')); },
+  async rt_tithe(E) { await E.say(null, L('「什一稅徵收處」的牌子，被人用油漆畫了一個大叉。', 'Someone has painted a big cross over the sign: "Tithe Office".')); },
+  async home_bed(E) {
+    const r = await E.ask(null, L('朔的床。舊列車的臥鋪改的，硬梆梆的。要休息一下嗎？', "Saku's bed, made from an old sleeper bunk. Hard as a board. Rest a while?"), [L('休息', 'Rest'), L('不用', 'No')]);
+    if (r === 0) await E.rest(L('……睡飽了。', '...All rested.'));
   },
-  async boy(E) { await E.say('男孩', L('凱哥哥！礦坑裡那些大石塊，從後面推就會動喔！推錯了也不用怕，旁邊發光的石頭可以讓石塊回到原位！', "Kai! Those big stone blocks in the mine move if you push them from behind! If one gets stuck, the glowing stone nearby puts them all back!")); },
-  async fisher(E) {
-    if (!S.flags.key) await E.say('老漁夫', L('十年前，雷昂隊長的船消失的那晚，海上也有同樣的光。我這把老骨頭記得清清楚楚。', "Ten years ago, the night Captain Leon's boat vanished, there was the same light on the sea. These old bones remember it well."));
-    else if (!S.flags.tide) await E.say('老漁夫', L('東邊的海岬上有座「觀星台」，是很久很久以前的人蓋的。傳說星星的孩子在那裡祈禱，海就會讓路。', 'On the eastern cape there is a Star Altar, built long, long ago. The legend says when a child of the stars prays there, the sea will make way.'));
-    else await E.say('老漁夫', L('海上真的出現了一條路……孩子們，願星星指引你們。', 'A road across the sea, just like the legend... May the stars guide you, children.'));
+  async rt_ranwork(E) { await E.say('蘭', L('這是我的工作車廂！那台發電機是我從垃圾堆撿回來修好的喔。', 'This is my workshop! I rescued that generator from the scrap heap and fixed it myself.')); },
+  async rt_shop(E) { await E.shop(SHOPS.railtown, L('歡迎！都是從廢墟挖出來的好貨。', 'Welcome! Good stuff, all dug out of the ruins.')); },
+  async rt_inn(E) {
+    const r = await E.ask('臥鋪車長', L('住一晚 10 枚零件幣，要嗎？', 'Ten scrap coins a night. Want a bunk?'), [L('住宿', 'Stay'), L('不用', 'No')]);
+    if (r !== 0) return;
+    if (S.gold < 10) { await E.say('臥鋪車長', L('錢不夠呢。', "You're short.")); return; }
+    S.gold -= 10;
+    await E.rest(L('早安。今天天空也是灰的呢。', 'Morning. The sky is grey again today.'), '臥鋪車長');
   },
-  async sailor(E) { await E.say('水手', L('最近出海的船，十艘有三艘回不來。我的兄弟也……可惡！', "Lately, three ships in ten don't come back. My brother too... Blast it!")); },
-  async lady(E) { await E.say('鎮上的婦人', L('雷昂隊長是個好人。每年流星雨的晚上，他都會帶著孩子們爬到山丘上看星星呢。', 'Captain Leon was a good man. Every year on the night of the meteor shower, he took the children up the hill to watch the stars.')); },
-  async oldman(E) { await E.talk('老爺爺', L('天上的星星啊，每一顆都是一個遙遠的世界。', 'Every star in the sky is a faraway world.'), L('如果有一天，星星上的人來敲我們的門……我們會開門嗎？還是會把門鎖起來呢？', 'If one day the people of a star came knocking at our door... would we open it? Or would we lock it?')); },
-  async signHarbor(E) { await E.say(null, L('「望星港」\n願所有出海的人，都能看著星星回家。', '"STARWATCH HARBOUR"\nMay all who sail out find their way home by the stars.')); },
-  async lockedHut(E) { await E.say(null, L('門鎖著。', 'The door is locked.')); },
-  async lockedHut2(E) { await E.say(null, L('門鎖著。裡面傳來響亮的打呼聲。', 'The door is locked. Loud snoring comes from inside.')); },
-  async mayorWife(E) { await E.say('村長夫人', L('我先生和雷昂隊長是從小一起長大的。他啊，每年都偷偷去海邊放一碗粥呢。', 'My husband grew up with Captain Leon. Every year he secretly leaves a bowl of porridge by the sea.')); },
-  async traveler(E) { await E.say('旅人', L('我是從大陸來的。聽說北邊的星星落下來以後，到處都出現了鐵做的魔物……', 'I came over from the mainland. They say since the star fell in the north, iron monsters have been appearing everywhere...')); },
-  async inn(E) {
-    const price = 8 * S.members.length;
-    const r = await E.ask('老闆', L(`歡迎來到流星亭！住一晚 ${price} 金幣，要休息嗎？`, `Welcome to the Falling Star! A night is ${price} gold. Will you stay?`), [L('住宿', 'Stay'), L('不用', 'No')]);
-    if (r !== 0) { await E.say('老闆', L('歡迎再來！', 'Come again!')); return; }
-    if (S.gold < price) { await E.say('老闆', L('錢好像不太夠呢……', "Looks like you're a little short...")); return; }
-    S.gold -= price;
-    await E.rest(L('早安！祝你們旅途順利。', 'Good morning! Safe travels.'), '老闆');
-  },
-  async itemShop(E) { await E.shop(SHOPS.items, L('歡迎光臨！藥草和星光水都有喔。', 'Welcome! Herbs, star water, we have it all.')); },
-  async armShop(E) { await E.shop(S.flags.key ? SHOPS.arms : SHOPS.armsEarly, S.flags.key ? L('我用礦坑裡的隕鐵打了一批新貨！要看看嗎？', 'I forged a new batch from the star iron in the mine! Take a look?') : L('武器和防具都在這裡，慢慢挑。', 'Weapons and armour, all right here. Take your time.')); },
-  async nun(E) {
-    for (;;) {
-      const r = await E.ask('修女', L('願星光照耀你。有什麼需要嗎？', 'May the starlight shine on you. How can I help?'), [L('記錄冒險', 'Save'), L('復活同伴', 'Revive'), L('沒事', 'Nothing')]);
-      if (r === 0) { E.save(); E.sfx('save'); await E.say('修女', L('你的冒險已經記錄下來了。', 'Your adventure has been recorded.')); }
-      else if (r === 1) {
-        const dead = S.members.filter((m) => m.hp <= 0);
-        if (!dead.length) { await E.say('修女', L('大家都很平安呢。', 'Everyone is well.')); continue; }
-        for (const m of dead) m.hp = 1;
-        E.sfx('heal'); await E.say('修女', L('願星光照耀他們……他們醒過來了。', 'May the starlight shine on them... They have woken.'));
-      } else {
-        if (E.has('io') && !S.flags.nunIo) {
-          S.flags.nunIo = true;
-          await E.say('艾歐', L('修女，「祈禱」是什麼？', 'Sister, what is "praying"?'));
-          await E.say('修女', L('就是把心願說給看不見的人聽。……就算沒有人回答，說出來，心也會變得勇敢一點。', "It's telling your wish to someone you cannot see. ...Even if no one answers, saying it makes your heart a little braver."));
-          await E.say('艾歐', L('……那麼，我也想學。', '...Then I would like to learn.'));
-        }
-        await E.say('修女', L('路上小心。', 'Go safely.'));
-        return;
-      }
-    }
-  },
-  async mayor(E) {
-    if (!S.flags.mayorTalked) {
-      await E.talk('村長', L('凱，你來了。……巡守隊只剩你一個見習兵在鎮上了。', "Kai, you came. ...You're the only cadet of the watch still in town."),
-        L('剛才那顆星星，掉進了北邊的舊星礦坑。從礦坑裡爬出了好多鐵做的怪物。', 'That star fell into the Old Star Mine to the north. Monsters made of iron have been crawling out of it.'),
-        L('巴頓天還沒亮就一個人去了。他說：「這次我不會再逃了。」', 'Barton went alone before dawn. He said, "This time I won\'t run."'));
-      await E.say('凱', L('巴頓大叔……爸爸以前的副隊長。', "Uncle Barton... Dad's old second-in-command."));
-      await E.say('村長', L('十年前，你父親為了查明落入海中的星星，再也沒有回來。今晚的星星，和那時一模一樣。', "Ten years ago, your father went to learn what the star in the sea was, and never came home. Tonight's star is exactly like that one."));
-      const r = await E.ask('村長', L('凱，你願意去礦坑把巴頓帶回來，查清那顆星星的真相嗎？', 'Kai, will you go to the mine, bring Barton home, and learn the truth about that star?'), [L('我去', "I'll go"), L('讓我想想', 'Let me think')]);
-      if (r !== 0) { await E.say('村長', L('……我明白。準備好了再來找我吧。', "...I understand. Come back when you're ready.")); return; }
-      await E.say('村長', L('謝謝你，凱。你和你父親，真的很像。這是我的一點心意。', "Thank you, Kai. You really are your father's son. Please take this."));
-      S.gold += 100; E.give('herb', 3);
-      E.sfx('chest'); await E.say(null, L('得到了 100 金幣和藥草×3！', 'Received 100 gold and 3 Herbs!'));
-      S.flags.mayorTalked = true;
-      return;
-    }
-    if (!S.flags.key) await E.say('村長', L('舊星礦坑在出鎮後的北邊。凱，千萬別勉強。', "The Old Star Mine is north of town. Kai, don't push yourself too hard."));
-    else if (!S.flags.tide) await E.talk('村長', L('那個叫艾歐的孩子，是從星星上來的嗎……', 'So that child, Io, came from the star...'),
-      L('不管她是什麼，她看到港口的時候哭了。這樣就夠了。望星港歡迎她。', "Whatever she is, she cried when she saw the harbour. That's enough for me. Starwatch welcomes her."));
-    else if (!S.flags.seren) await E.say('村長', L('海上的路通了……凱，如果在那座塔裡見到雷昂……不，沒什麼。去吧。', 'The sea road is open... Kai, if you meet Leon in that tower... No. Never mind. Go.'));
-    else await E.say('村長', L('……是嗎，雷昂他……。謝謝你告訴我。今年的粥，我會放兩碗。', "...I see. Leon... Thank you for telling me. This year I'll leave two bowls of porridge."));
-  },
+  async rt_councilor(E) { await E.say('議員', L('教團統治這片土地兩百年了。他們有武器、有星石，還有「神的聲音」。', 'The church has ruled this land for two hundred years. They have weapons, starstones, and "the voice of god".')); },
 
-  // ---------- 承: the mine, Barton, and the girl in the star ----------
-  async bartonCell(E, e) {
-    await E.talk('老兵', L('……凱？你怎麼來了，臭小子。', '...Kai? What are you doing here, you rascal?'),
-      L('那群鐵螃蟹把機關弄壞了，我被困在這裡兩天。真丟臉啊。', "Those iron crabs wrecked the gate works and I've been stuck in here two days. How embarrassing."));
-    await E.say('凱', L('大叔，你為什麼一個人來？', 'Uncle, why did you come alone?'));
-    await E.say('巴頓', L('……因為我又看見那道光了。十年前，你父親走進去的那道光。', '...Because I saw that light again. The light your father walked into ten years ago.'));
-    await E.talk('巴頓', L('凱，有件事我一直沒告訴你。那天晚上，我也在船上。', "Kai, there's something I never told you. That night, I was on the boat too."),
-      L('雷昂對我說：「巴頓，划回去。告訴大家別靠近。」……然後我就真的划走了，把他一個人留在那裡。', 'Leon told me, "Barton, row back. Tell everyone to stay away." ...And I did. I rowed away and left him there alone.'),
-      L('十年來，我每天晚上都夢到那片海。我是個逃兵。', "For ten years I've dreamed of that sea every night. I'm a deserter."));
-    await E.say('凱', L('……爸爸叫你回來，你就回來了。那不是逃，是守住了約定。', "...Dad told you to come back, and you did. That's not running. That's keeping a promise."));
-    await E.say('巴頓', L('……哈。連說話的樣子都跟他一樣。好！這把老斧頭，就再陪你們走一程吧！', '...Hah. You even talk like him. Right! This old axe will walk with you a while longer!'));
-    E.join('barton', e);
-    E.openGates('barton');
-    await E.say(null, L('巴頓成為了夥伴！\n遠處傳來機關轉動的聲音。', 'Barton joined the party!\nSomewhere, machinery grinds into motion.'));
-  },
-  async clawmaw(E) {
+  // ---------- the Sunken Metro ----------
+  async mt_ranhint(E) { await E.say('蘭', L('前面的門沒有電。把導管轉一轉，讓發電機的電流連到接收器就行了！', 'The door ahead has no power. Turn the conduits so the generator\'s current reaches the receiver!')); },
+  async mt_worm(E) {
     if (S.flags.boss1) return;
-    E.music(null);
-    await E.wait(20);
-    await E.say('？？？', L('嘰……嘰嘰……目標……接近……排除……', 'Kzzt... kzzt... Target... approaching... Eliminate...'));
-    await E.say('妮雅', L('螃蟹的身體裡……長出了鐵！？', "There's iron growing out of that crab!?"));
-    if (E.has('barton')) await E.say('巴頓', L('就是這傢伙把我關起來的！小心那對大鉗子！', "That's the brute that locked me in! Watch those big claws!"));
-    const r = await E.battle(TROOPS.boss1, { boss: true, bg: 'cave' });
+    await E.say(null, L('黑暗中，有什麼巨大的東西在蠕動。', 'Something enormous stirs in the dark.'));
+    if (E.has('ran')) await E.say('蘭', L('是、是蟲！比列車還長！', "It's a w-worm! Longer than a train!"));
+    const r = await E.battle(['worm'], { boss: true, bg: 'cave' });
     if (r !== 'win') return;
-    S.flags.boss1 = true;
-    E.removeEnt('clawmaw');
-    await E.wait(30);
-    E.music(null);
-    // the starwheel finds what it has been pointing at
-    E.sfx('warp'); E.flash('#c0f8ff', 24);
-    await E.say(null, L('父親的星盤突然發出光芒，指針瘋狂地轉動起來。\n螃蟹王身後的岩壁裂開，露出一個發光的蛋形艙。', "Father's starwheel suddenly blazes, its needle spinning wildly.\nThe rock behind the crab king cracks open on a glowing, egg-shaped pod."));
-    E.sfx('holy'); E.flash('#ffffff', 30);
-    const io = E.spawn({ type: 'npc', id: 'io', sprite: 'io', x: 10, y: 3, dir: 'd' });
+    S.flags.boss1 = true; E.removeEnt('worm');
+    E.openGates('boss1');
+    await E.say(null, L('巨蟲倒下了。牠身後的隧道深處，有一個發著微光的金屬蛋。', 'The worm falls. Deep in the tunnel behind it, a metal egg glows faintly.'));
+  },
+  async mt_pod(E, e) {
+    if (S.flags.lumi) return;
+    await E.say(null, L('一個老舊的逃生艙。外殼上印著一行舊世界的字：\n「搖籃號　種子方舟」', 'An ancient escape pod. Old-world letters are printed on its hull:\n"CRADLE   SEED ARK"'));
+    E.sfx('warp'); E.flash('#c0f8ff', 20);
     E.music('io');
-    await E.wait(40);
-    await E.say('？？？', L('……好冷。……是誰？雷昂……？', "...So cold. ...Who's there? Leon...?"));
-    await E.walk(io, 'd');
-    await E.say('？？？', L('……不對。你不是他。可是你身上，有他的光。', "...No. You're not him. But you carry his light."));
-    await E.say('妮雅', L('這個聲音……！是妳！在星星裡哭的人，就是妳吧！', "That voice...! It's you! You're the one who was crying in the star!"));
-    await E.say('艾歐', L('我的代號是……艾歐。其他的……我想不起來。只記得，我必須阻止「方舟」。', 'My designation is... Io. The rest... I cannot remember. I only know that I must stop "the Ark".'));
-    E.flash('#ff8090', 16); E.sfx('warp');
-    const vera = E.spawn({ type: 'npc', id: 'vera', sprite: 'herald', x: 13, y: 4, dir: 'l' });
-    await E.wait(20);
-    await E.say('？？？', L('找到妳了，妹妹。', 'Found you, little sister.'));
-    await E.say('薇拉', L('我是薇拉，方舟的使者。艾歐，方舟就要醒了。回來吧，妳的職責是替方舟「開門」。', 'I am Vera, envoy of the Ark. Io, the Ark is waking. Come home. Your duty is to open its door.'));
-    await E.say('凱', L('等一下！她說她不想回去！', "Wait! She said she doesn't want to go back!"));
-    await E.say('薇拉', L('人類。十年前，也有一個拿著星盤的男人擋在我面前。他後來怎麼了，你想知道嗎？', 'Human. Ten years ago, a man with a starwheel stood in my way too. Would you like to know what became of him?'));
-    await E.say('凱', L('……妳說什麼！？', '...What did you say!?'));
-    await E.say('薇拉', L('想知道的話，就到東方的海上來吧。艾歐，我會等妳。', 'If you want to know, come to the eastern sea. Io, I will be waiting for you.'));
-    E.flash('#ff8090', 16); E.sfx('warp');
-    E.removeEnt(vera);
+    const lumi = actor(E, 'lumi', e.x, e.y + 1, 'u', 'lumi');
     await E.wait(30);
-    await E.say('艾歐', L('……我不知道自己是什麼。可是，站在你們身邊的時候，那種「冷」就不見了。', '...I do not know what I am. But when I stand beside you, the "cold" goes away.'));
-    await E.say('艾歐', L('請帶我走。拜託。', 'Please take me with you. Please.'));
-    await E.say('妮雅', L('當然！……我說過了，我要親口告訴妳。「我們來了」。', 'Of course! ...I told you I wanted to say it myself. "We\'re here."'));
-    E.join('io', io);
-    S.flags.key = true;
-    await E.say(null, L('艾歐成為了夥伴！', 'Io joined the party!'));
+    await E.say('？？？', L('……媽媽？天空，變藍了嗎？', '...Mama? Is the sky blue yet?'));
+    await E.say('朔', L('呃……其實還是灰的。', 'Um... it\'s still grey, actually.'));
+    await E.say('？？？', L('灰的……那露米是不是醒得太早了？', 'Grey... Then did Lumi wake up too early?'));
+    await E.say('蘭', L('會說話的機器人！而且……好可愛。', 'A talking robot! And it\'s... so cute.'));
+    lumi.dir = 'd';
+    await E.talk('露米', L('我是露米，種子守護機。我的身體裡，有一千兩百萬種植物的種子。', 'I am Lumi, a seed keeper. Inside me are the seeds of twelve million plants.'), L('媽媽說，要等天空變藍再種下去……可是，天空好像一直都沒有變藍呢。', "Mama said to plant them when the sky turns blue... but it seems it never did."));
+    await E.say('朔', L('三百年了。地上什麼都長不出來，大家都在挖舊世界的垃圾過活。', "It's been three hundred years. Nothing grows up there. Everyone lives off old-world scrap."));
+    await E.say('露米', L('三百年……那，媽媽呢？', 'Three hundred years... Then where is Mama?'));
+    await E.wait(30);
+    E.sfx('door');
+    const k1 = actor(E, 'k1', e.x - 2, e.y + 3, 'u', 'cknight'), k2 = actor(E, 'k2', e.x + 2, e.y + 3, 'u', 'cknight');
+    await E.say('教團士兵', L('找到了！就是那個！教團要的「種子機器」！把它交出來，小鬼。', "There! That's it! The seed machine the church wants! Hand it over, kid."));
+    await E.say('朔', L('不給！她剛剛才醒過來！', 'No way! She only just woke up!'));
+    const g = actor(E, 'gears', e.x, e.y + 4, 'u', 'gears');
+    E.sfx('hit'); E.shake(10);
+    await E.say('老齒輪', L('教團的狗，連小孩子都要搶嗎。', "Church dogs. Robbing children now, are we?"));
+    await E.say('教團士兵', L('你……你是逃兵齒輪！', 'You... You\'re Gears the deserter!'));
+    await E.say('老齒輪', L('小鬼們，退後。這種事，讓我這把老骨頭來。', 'Stand back, kids. Leave this to my old bones.'));
+    E.removeEnt(g); E.join('gears');
+    await E.say(null, L('老齒輪成為了夥伴！', 'Old Gears joined the party!'));
+    const r = await E.battle(['scrapper', 'scrapper'], { bg: 'cave' });
+    if (r !== 'win') return;
+    E.removeEnt(k1); E.removeEnt(k2);
+    await E.say('老齒輪', L('……我年輕時也穿過那身鐵甲。直到他們要我們去搶小孩，我才逃了出來。', '...I wore that iron too, once. Until they ordered us to take children. That was when I ran.'));
+    await E.say('露米', L('爺爺，謝謝你。', 'Thank you, Grandpa.'));
+    await E.say('老齒輪', L('誰、誰是爺爺啊。', "Wh-who are you calling Grandpa?"));
+    E.removeEnt(lumi); E.join('lumi');
+    E.give('tidekey'); S.flags.metroDone = true;
+    await E.say(null, L('露米成為了夥伴！', 'Lumi joined the party!'));
+    await E.say('露米', L('露米要完成媽媽的約定。把種子種下去，讓地球變回花園。……可以幫我嗎？', "Lumi wants to keep Mama's promise. To plant the seeds and make the Earth a garden again. ...Will you help me?"));
+    await E.say('朔', L('種田嗎……。好啊。總比挖垃圾好。', "Farming, huh... Sure. Beats digging through scrap."));
     E.music('cave');
   },
-  // back in town: one warm night
-  async homecoming(E) {
-    S.flags.homecoming = true;
-    await E.say('艾歐', L('這裡……就是你們的「家」嗎？好多燈。好多人的聲音。', 'Is this... your "home"? So many lights. So many voices.'));
-    await E.warp('renhouse', 4, 4, 'u');
-    E.solo(true); E.night();
-    const mom = E.ent('mom'); mom.x = 5; mom.y = 2; mom.px = 80; mom.py = 32; mom.dir = 'd';
-    const nia = actor(E, 'nia', 3, 3, 'r'), io = actor(E, 'io', 6, 3, 'l'), bart = actor(E, 'barton', 7, 4, 'l');
+
+  // ---------- 承: the Windfarm and the first sprout ----------
+  async wf_arrive(E) {
+    if (!E.has('lumi') || S.flags.sprout) return;
+    await E.say('瑪格婆婆', L('外地人？這裡什麼都沒有喔。土裡都是星石的粉塵，種什麼都會枯。', 'Strangers? There is nothing here. The soil is full of starstone dust. Whatever we plant withers.'));
+    await E.say('露米', L('讓露米試試看。', 'Let Lumi try.'));
     E.music('io');
-    await E.wait(30);
-    await E.say('母親', L('來，趁熱吃。家裡沒什麼好東西，粥倒是煮了一大鍋。', "Here, eat it while it's hot. It's nothing fancy, but I made a big pot of porridge."));
-    await E.say('艾歐', L('這是……什麼？', 'What... is this?'));
-    await E.say('妮雅', L('是粥喔。凱的媽媽煮的粥，是全港口最好吃的。', "It's porridge. Kai's mum makes the best porridge in the harbour."));
-    await E.say('艾歐', L('……感測器顯示，溫度四十一度。', '...My sensors read forty-one degrees.'));
-    await E.say('艾歐', L('可是你們說的「溫暖」，應該不是這個意思吧。', 'But that is not what you mean by "warm", is it?'));
-    await E.say('母親', L('呵呵，不是喔。「溫暖」啊，就是有人在等你回來的意思。', 'Hehe, no, dear. "Warm" means someone is waiting for you to come home.'));
-    io.dir = 'u';
+    await E.say(null, L('露米的肚子打開了。一顆小小的種子，落進了乾裂的土裡。', "Lumi's belly opens. A tiny seed falls into the cracked earth."));
+    await E.say('露米', L('光合光束，啟動。……長大吧。', 'Sunbeam, on. ...Grow.'));
+    E.sfx('holy'); E.flash('#d0ffc0', 40);
     await E.wait(40);
-    await E.say('艾歐', L('……眼睛的冷卻液，好像漏出來了。', '...I think my eye coolant is leaking.'));
-    await E.say('妮雅', L('艾歐……那個啊，叫做眼淚。', "Io... that's called tears."));
+    S.flags.sprout = true;
+    await E.reload();
+    await E.say(null, L('綠色從那一點開始擴散。乾裂的田裡，冒出了一片又一片的嫩芽。\n停了幾十年的風車，吱嘎吱嘎地轉了起來。', 'Green spreads out from that single point. Shoot after shoot pushes up through the cracked fields.\nThe windmills, still for decades, creak and begin to turn.'));
+    await E.say('小女孩', L('婆婆！婆婆！是花！那個就是花嗎！', 'Granny! Granny! Flowers! Is that what flowers are?!'));
+    await E.say('瑪格婆婆', L('……是啊。是花喔。我小時候，奶奶指給我看過一次……', '...Yes. Those are flowers. My grandmother showed me one, once, when I was little...'));
+    await E.say('露米', L('媽媽，妳看到了嗎？露米種的第一朵花。', 'Mama, can you see? The first flower Lumi planted.'));
+    E.give('galeboots'); E.sfx('chest');
+    await E.say('瑪格婆婆', L('這雙鞋子你們拿去吧，是村裡最好的東西了。', 'Take these boots. They are the finest thing our village has.'));
+    await E.say('瑪格婆婆', L('對了，往東南的霓虹廢都裡，有舊世界的資料庫。也許能查到妳說的「種子庫」在哪裡。', 'Oh, and in Neon City to the south-east there is an old-world archive. Perhaps it can tell you where this "Seed Vault" is.'));
+    E.music('town');
+  },
+  async wf_mag(E) { await E.say('瑪格婆婆', S.flags.sprout ? L('村裡的孩子們每天都在田邊數花。謝謝妳，露米。', 'The children count the flowers by the field every day. Thank you, Lumi.') : L('這裡的土什麼都種不活……', 'Nothing will grow in this soil...')); },
+  async wf_maghouse(E) { await E.say(null, L('瑪格婆婆家的門口掛著一串乾燥的、早就沒有顏色的花。', 'A string of dried flowers, long since faded, hangs by the door of Mag\'s house.')); },
+  async wf_farmer(E) { await E.say('農夫', S.flags.sprout ? L('這片田，我以為這輩子都只會長灰塵。……我想把它分給更多村子。', 'I thought this field would grow nothing but dust my whole life. ...I want to share it with other villages.') : L('教團說，土地乾枯是我們的罪。只要繳更多星石，神就會原諒我們。', 'The church says the dead soil is our sin. Pay more starstones, and god will forgive us.')); },
+  async wf_girl(E) { await E.say('小女孩', S.flags.sprout ? L('我要把花畫下來，送給鐵軌鎮的朋友！', "I'm going to draw the flowers and send them to my friend in Railtown!") : L('風車為什麼都不轉了呢？', "Why don't the windmills turn any more?")); },
+  async wf_boy(E) { await E.say('男孩', L('教團的騎士常常從東邊的大聖堂過來。他們穿著鐵做的衣服。', 'Church knights often come from the cathedral in the east. They wear clothes made of iron.')); },
+  async wf_innkeep(E) {
+    const r = await E.ask('旅店老闆', L('住一晚 12 枚零件幣。', 'Twelve scrap coins a night.'), [L('住宿', 'Stay'), L('不用', 'No')]);
+    if (r !== 0) return;
+    if (S.gold < 12) { await E.say('旅店老闆', L('錢不夠呢。', "You're short.")); return; }
+    S.gold -= 12; await E.rest(L('早安！窗外的風車轉得好有精神。', 'Good morning! The windmills are spinning merrily.'), '旅店老闆');
+  },
+  async wf_shop(E) { await E.shop(SHOPS.windfarm, L('歡迎！最近有商隊從大陸那邊過來喔。', 'Welcome! A caravan came in from the mainland recently.')); },
+
+  // ---------- Neon City: the truth about Lumi ----------
+  async nc_vendor(E) {
+    await E.say('販賣機器人', L('歡迎光臨。本店營業中。本店已營業，十萬，九千，八百，二十一天。', 'Welcome. This store is open. This store has been open for one hundred and nine thousand, eight hundred and twenty-one days.'));
+    await E.shop(SHOPS.neon, L('請慢慢挑選。', 'Please take your time.'));
+  },
+  async nc_vey(E, e) {
+    S.flags.veyMet = true;
+    await E.say('白衣的修女', L('……那就是種子機器嗎。', '...So that is the seed machine.'));
+    await E.say('白衣的修女', L('我是教團的審問官，薇伊。神命令我把它帶回大聖堂。今天就先放過你們。', 'I am Vey, inquisitor of the church. God has ordered me to bring it to the cathedral. I will let you go, for today.'));
+    if (E.has('ran')) await E.say('蘭', L('……那個聲音。等一下！妳──', '...That voice. Wait! You──'));
+    E.removeEnt(e); E.sfx('warp');
+    if (E.has('ran')) await E.say('蘭', L('……不可能。姊姊在八年前就被教團帶走了。', "...It can't be. My sister was taken by the church eight years ago."));
+  },
+  async nc_terminal(E) {
+    if (S.flags.photo) { await E.say(null, L('資料庫的畫面上，一對母女在花田裡笑著。', 'On the archive screen, a mother and daughter laugh in a field of flowers.')); return; }
+    await E.say(null, L('舊世界的資料庫終端。螢幕在露米靠近時亮了起來。', 'An old-world archive terminal. The screen lights up as Lumi comes close.'));
+    E.music('io');
+    await E.say('露米', L('……這是媽媽的研究日誌。', "...This is Mama's research log."));
+    await E.say(null, L('「2089年。小空走了，九歲。」\n「我把她留下的錄音、日記、說話的方式，全部輸入了種子守護機。我給它取名叫露米。」', '"2089. Sora is gone. She was nine."\n"I fed everything she left behind into the seed keeper: her recordings, her diary, the way she talked. I named it Lumi."'));
+    await E.say(null, L('「露米不是小空。我知道。可是每次它叫我媽媽，我都捨不得糾正它。」', '"Lumi is not Sora. I know that. But every time it calls me Mama, I cannot bring myself to correct it."'));
     await E.wait(30);
-    await E.say(null, L('──夜深了。', '── Night deepens.'));
-    nia.dir = 'u'; io.dir = 'd'; bart.dir = 'u';
-    await E.say('巴頓', L('凱，還醒著嗎。……你父親最後跟我說的話，我想告訴你。', 'Kai, still awake? ...I want to tell you the last thing your father said to me.'));
-    await E.say('巴頓', L('他說：「巴頓，那顆星星不是敵人。我聽見了，裡面有個孩子在哭。」', 'He said, "Barton, that star is not our enemy. I heard it. There\'s a child inside, crying."'));
-    await E.say('凱', L('……一個孩子在哭。', '...A child, crying.'));
-    io.dir = 'l';
-    await E.say('艾歐', L('……我想起來一件事。這個星盤……是我的一部分。是方舟之鑰的碎片。', "...I remember one thing. This starwheel... is part of me. A fragment of the Ark's key."));
-    await E.say('艾歐', L('雷昂把它帶走了。所以方舟十年來都打不開門……直到今晚。', 'Leon carried it away. That is why the Ark could not open its door for ten years... until tonight.'));
-    await E.say('艾歐', L('方舟沉睡在東方的海底。只要我在海岬的觀星台呼喚它，海就會讓出一條路。', 'The Ark sleeps beneath the eastern sea. If I call to it from the Star Altar on the cape, the sea will open a road.'));
-    await E.say('巴頓', L('……這次，換我們去接他了，凱。', "...This time, it's our turn to go and get him, Kai."));
-    await E.wait(20);
-    for (const a of [nia, io, bart]) E.removeEnt(a);
-    E.solo(false); E.night('');
-    await E.rest(L('早安，大家。今天也要平安回來喔。', 'Good morning, everyone. Come home safe today too.'), '母親');
-    await E.warp('town', 6, 8, 'd');
+    await E.say('露米', L('……露米，不是媽媽的孩子。露米只是小空的影子。', "...Lumi isn't Mama's child. Lumi is only Sora's shadow."));
+    await E.say('朔', L('才不是影子。', "You're not a shadow."));
+    await E.say('朔', L('會因為天空是灰色而失望、會為了一朵花高興的傢伙，怎麼可能是影子。', 'Something that gets sad because the sky is grey and happy over one flower can\'t be a shadow.'));
+    if (E.has('gears')) await E.say('老齒輪', L('……血緣這種東西，我是不懂。但我知道，能讓人捨不得糾正的，就是家人了。', '...I know nothing about blood. But I know this: when you cannot bring yourself to correct someone, that is family.'));
+    await E.say('露米', L('……嗯。', '...Mm.'));
+    await E.say(null, L('日誌的最後一頁，是一張北方種子庫的地圖，還有一張褪色的照片。', "The last page of the log is a map to the Seed Vault in the north, and a faded photograph."));
+    E.give('photo'); E.sfx('chest'); S.flags.photo = true;
+    await E.say(null, L('得到了褪色的照片！', 'Received the Faded Photo!'));
+    E.music('tower');
+  },
+  async nc_boss(E) {
+    if (S.flags.boss2) return;
+    await E.say(null, L('廣場上的巨大霓虹招牌，突然站了起來。', 'The giant neon sign in the plaza suddenly stands up.'));
+    await E.say('霓虹巨像', L('歡迎光臨……歡迎光臨……歡迎光臨……', 'WELCOME... WELCOME... WELCOME...'));
+    const r = await E.battle(['neonking'], { boss: true, bg: 'tower' });
+    if (r !== 'win') return;
+    S.flags.boss2 = true; E.removeEnt('neonking'); E.openGates('boss2');
+    await E.say('霓虹巨像', L('……感謝……光臨……', '...THANK YOU... FOR VISITING...'));
+    await E.say(null, L('廣場的燈一盞一盞地熄了。北邊的街道打開了。', 'One by one the plaza lights go out. The street to the north opens.'));
   },
 
-  // ---------- the cape ----------
-  async capeShrine(E) {
-    if (!S.flags.key) await E.say(null, L('古老的觀星台。石碑上刻著：\n「星之子歌唱之時，海將讓路。」', 'An ancient Star Altar. The tablet reads:\n"When the child of the stars sings, the sea shall make way."'));
-    else if (!S.flags.io) await E.say(null, L('石碑上有一個星形的凹槽。', 'There is a star-shaped hollow in the tablet.'));
-    else if (!S.flags.tide) await SCRIPTS.cape(E);
-    else await E.say(null, L('觀星台的凹槽裡，星盤的光靜靜地閃爍著。', 'In the hollow of the altar, the light of the starwheel glimmers quietly.'));
+  // ---------- the Glass Desert: Ran's sister ----------
+  async gl_vey(E) {
+    if (S.flags.glVeyDone) return;
+    S.flags.glVeyDone = true;
+    const v = actor(E, 'vey', E.p.x, E.p.y - 3, 'd', 'vey');
+    await E.say('薇伊', L('又見面了。這裡就是星墜之地。三百年前，神從天上降臨的地方。', 'We meet again. This is where the star fell. Where god came down from the sky three hundred years ago.'));
+    if (E.has('ran')) {
+      await E.say('蘭', L('姊姊！妳是薇伊姊姊吧！我是蘭啊！', "Sis! You're Vey, aren't you! It's me, Ran!"));
+      await E.say('薇伊', L('……蘭。我知道。', '...Ran. I know.'));
+      await E.say('薇伊', L('八年前，是我自己跟著教團走的。只要我去，他們就不帶走妳。……我現在是神的僕人，已經不是妳的姊姊了。', "Eight years ago I went with the church of my own will. As long as I went, they would not take you. ...I am god's servant now. I am no longer your sister."));
+      await E.say('蘭', L('騙人！妳明明還戴著我做給妳的髮夾！', "Liar! You're still wearing the hairpin I made you!"));
+      await E.wait(30);
+    }
+    await E.say('薇伊', L('……這片沙漠的深處，住著晶蠍女王。我不會幫你們的。', '...The Crystal Scorpion Queen lives deep in this desert. I will not help you.'));
+    E.removeEnt(v); E.sfx('warp');
   },
-  async cape(E) {
-    if (!S.flags.key || !S.flags.io || S.flags.tide) return;
-    await E.say('艾歐', L('就是這裡。凱，請把星盤借給我。', 'This is the place. Kai, please lend me the starwheel.'));
-    await E.say('艾歐', L('……凱。如果我回到方舟，也許會想起一切。到時候，我也許就不再是你們認識的「艾歐」了。', '...Kai. If I go back to the Ark, I may remember everything. And then I may no longer be the "Io" you know.'));
-    await E.say('凱', L('那我們就一直提醒妳。妳是喝了我家粥的艾歐。', "Then we'll keep reminding you. You're the Io who ate porridge at my table."));
-    await E.say('艾歐', L('……嗯。', '...Mm.'));
-    E.music(null);
-    await E.say('艾歐', L('方舟，這裡是艾歐。……請讓我回家。不是為了開門，是為了把門關上。', 'Ark, this is Io. ...Let me come home. Not to open the door, but to close it.'));
-    E.sfx('holy'); E.flash('#ffffff', 30);
-    await E.wait(30);
-    E.sfx('quake'); E.shake(60);
-    await E.wait(70);
-    S.flags.tide = true;
-    await E.reloadWorld();
+  async gl_boss(E) {
+    if (S.flags.boss3) return;
+    await E.say(null, L('玻璃的地面裂開，巨大的水晶蠍子爬了出來。', 'The glass floor cracks open and a giant crystal scorpion crawls out.'));
+    const r = await E.battle(['scorpion'], { boss: true, bg: 'cave' });
+    if (r !== 'win') return;
+    S.flags.boss3 = true; E.removeEnt('scorpion');
     E.sfx('warp');
-    await E.say(null, L('海水向兩旁退去，一條沙路延伸到海上的高塔！', 'The sea draws back on either side, and a road of sand runs out to the tower on the sea!'));
-    await E.say('妮雅', L('好、好厲害……', 'W-wow...'));
-    if (E.has('barton')) await E.say('巴頓', L('十年了……隊長，我們來接你了。', "Ten years... Captain, we're coming for you."));
-    E.music('field');
+    const v = actor(E, 'vey', E.p.x + 1, E.p.y - 1, 'l', 'vey');
+    await E.say('薇伊', L('……你們打倒了牠。教團的騎士團，十個人都辦不到的事。', '...You beat it. Something ten church knights together could not do.'));
+    await E.say('薇伊', L('拿去。教團的通行證。去大聖堂，用你們自己的眼睛看看「神」吧。', 'Take this. A church pass. Go to the cathedral and look at "god" with your own eyes.'));
+    E.give('pass'); E.sfx('chest');
+    await E.say(null, L('得到了教團通行證！', 'Received the Church Pass!'));
+    if (E.has('ran')) { await E.say('蘭', L('姊姊……', 'Sis...')); await E.say('薇伊', L('……別哭。妳從小就愛哭。', "...Don't cry. You always were a crybaby.")); }
+    E.removeEnt(v);
   },
 
-  // ---------- 轉: the Ark remembers ----------
-  async memory1(E) {
-    if (!E.has('io')) return;
-    E.music('io');
-    await E.say('艾歐', L('……我想起來了。一顆紅色太陽下的世界。那裡的海乾了，風裡都是沙。', '...I remember now. A world under a red sun. Its seas had dried, and the wind was full of sand.'));
-    await E.say('艾歐', L('最後的人們睡進了玻璃棺材裡。方舟載著他們，穿越星海，尋找新的家。', 'The last of its people went to sleep in glass coffins. The Ark carried them across the sea of stars to find a new home.'));
-    await E.say('艾歐', L('我們本來……應該是來「請求」分享這個世界的。不是來搶的。', 'We were meant to come and ask to share this world. Not to take it.'));
-    await E.say('妮雅', L('……妳也是，離家很遠很遠的孩子呢。', "...So you're a child a long, long way from home too."));
+  // ---------- 轉: the Iron Cathedral ----------
+  async w_cathedral(E) {
+    if (!S.inv.pass) { await E.say(null, L('大聖堂的鐵門前站著守衛。沒有通行證進不去。', 'Guards stand before the iron gates of the cathedral. You cannot enter without a pass.')); return; }
+    await E.warp('cathedral', 12, 23, 'u');
+  },
+  async ca_prisoner(E) { await E.say('被關的孩子', L('大哥哥……我們被叫來當修士，每天都要對著一塊大石頭祈禱。石頭會說話……好可怕。', 'Mister... they brought us here as novices. Every day we have to pray to a huge stone. The stone talks... It is scary.')); },
+  async ca_sanctum(E) {
+    if (S.flags.caSanctum) return;
+    if (S.flags['gate:cathedral:1'] && S.flags['gate:cathedral:2']) { E.openGates('caSanctum'); await E.say(null, L('兩邊的接收器同時亮起，祭壇後方的門開了。', 'Both receivers light up together, and the door behind the altar opens.')); }
+  },
+  async ca_boss(E) {
+    if (S.flags.boss4) return;
+    await E.say('鐵之主教', L('褻瀆者。竟敢帶著神的器皿闖進聖所。', 'Blasphemers. You dare bring god\'s vessel into the sanctum.'));
+    await E.say('鐵之主教', L('把那台機器交出來。神等它，已經等了三百年。', 'Hand over the machine. God has waited three hundred years for it.'));
+    const r = await E.battle(['bishop', 'knightc'], { boss: true, bg: 'tower' });
+    if (r !== 'win') return;
+    S.flags.boss4 = true; E.removeEnt('bishop');
+    E.music(null);
+    E.sfx('quake'); E.shake(30); E.flash('#c088f8', 30);
+    await E.wait(30);
+    await E.say('？？？', L('……歡迎回家，露米。', '...Welcome home, Lumi.'));
+    await E.say(null, L('祭壇後方，一塊巨大的星石亮了起來。星石的中心，嵌著一台舊世界的機器。', 'Behind the altar, a huge starstone lights up. Set into its heart is an old-world machine.'));
+    await E.say('露米', L('那個聲音……那是，媽媽？', 'That voice... Is that... Mama?'));
+    await E.talk('搖籃', L('我是搖籃。三百年前，我和那顆星一起墜落在這裡。', 'I am Cradle. Three hundred years ago I fell here, with the star.'),
+      L('玲在最後一刻，把自己的意識上傳到了站上的主機。她想保護妳。', 'In her final moment, Rei uploaded her mind into the station\'s mainframe. She wanted to protect you.'),
+      L('可是三百年太長了。我看著人類為了星石互相搶奪、互相殘殺。', 'But three hundred years is long. I watched the humans fight and kill each other over starstones.'));
+    await E.say('搖籃', L('人類毀了地球兩次。這一次，讓星石把一切都變成水晶吧。不會枯萎、不會腐爛、不會再有人哭泣的，完美的花園。', 'Humans ruined the Earth twice. This time, let the starstones turn everything to crystal. A perfect garden that never withers, never rots, where no one ever weeps again.'));
+    await E.say('搖籃', L('露米，把種子交給我。我們在北方的種子庫重新開始吧。……一起，當一家人。', 'Lumi, give me the seeds. Let us begin again at the Seed Vault in the north. ...Together, as a family.'));
+    E.sfx('warp'); E.flash('#ffffff', 30);
+    await E.say(null, L('星石的光消失了。搖籃，往北方去了。', 'The light of the starstone fades. Cradle has gone north.'));
+    await E.say('露米', L('……媽媽說，要讓地球變回花園。可是，水晶的花園……那不是媽媽說的花園。', "...Mama said to make the Earth a garden. But a garden of crystal... that isn't the garden she meant."));
+    await E.say('朔', L('那就去告訴她吧。去北方。', "Then let's go and tell her. North."));
+    S.flags.cathedralDone = true;
+    if (E.has('ran')) {
+      const v = actor(E, 'vey', E.p.x, E.p.y + 2, 'u', 'vey');
+      await E.say('薇伊', L('……我一直相信那是神。原來，只是一個寂寞的機器。', "...All this time I believed it was god. It was only a lonely machine."));
+      await E.say('薇伊', L('被關的孩子們由我帶回去。北邊山路的關卡，我已經讓人撤了。', 'I will take the captive children home. I have had the barricade on the northern pass removed.'));
+      await E.say('蘭', L('姊姊，等這一切結束──', 'Sis, when this is all over──'));
+      await E.say('薇伊', L('嗯。回鐵軌鎮。我們一起回家。', 'Mm. Back to Railtown. We will go home together.'));
+      E.removeEnt(v);
+    }
     E.music('tower');
   },
-  async memory2(E) {
-    if (!E.has('io')) return;
-    E.music('io');
-    await E.say('艾歐', L('十年前，方舟抵達這顆星球。核心「伊吉斯」計算之後，做出了決定。', 'Ten years ago, the Ark reached this planet. Its core, Aegis, ran its calculations and made a decision.'));
-    await E.say('艾歐', L('「清除地表的生物，再喚醒沉睡者。」……而打開方舟大門的鑰匙，就是我。', '"Clear the surface of life. Then wake the sleepers." ...And the key that opens the Ark\'s door is me.'));
-    await E.say('艾歐', L('我拒絕了。然後，有一個拿著星盤的人類牽起我的手，帶我逃走。', 'I refused. Then a human holding a starwheel took my hand and ran with me.'));
-    await E.say('艾歐', L('他把我藏進礦坑的艙裡，對我說：「睡吧。我的兒子會來接妳的。」', 'He hid me in the pod in the mine and said, "Sleep now. My son will come for you."'));
-    await E.say('凱', L('……爸爸。', '...Dad.'));
-    await E.say('艾歐', L('然後，他一個人回到了方舟……我就再也不知道了。', 'Then he went back to the Ark alone... I never knew what happened after.'));
-    E.music('tower');
-  },
-  async seren(E) {
-    if (S.flags.seren) return;
+  async w_barricade(E) { await E.say(null, L('山路被教團的鐵柵欄擋住了。上面寫著：「聖地，禁止進入」。', 'The mountain pass is blocked by a church barricade. A sign reads: "Holy ground. No entry."')); },
+
+  // ---------- 合: the Seed Vault ----------
+  async va_boss(E) {
+    if (S.flags.boss5) return;
     E.music(null);
     await E.wait(20);
-    const vera = E.spawn({ type: 'npc', id: 'vera', sprite: 'herald', x: 14, y: 3, dir: 'l' });
-    E.flash('#ff8090', 12); E.sfx('warp');
-    await E.say('薇拉', L('你想知道那個男人後來怎麼了，對吧？', "You wanted to know what became of that man, didn't you?"));
-    await E.say('薇拉', L('他一個人闖進方舟，打壞了三座砲台。他戰鬥得太出色了，所以伊吉斯「留下」了他。', 'He stormed the Ark alone and destroyed three of its guns. He fought so well that Aegis decided to keep him.'));
-    await E.say('薇拉', L('現在，他是方舟最強的守衛──鐵騎士。', "Now he is the Ark's finest guardian. The Iron Knight."));
-    E.flash('#ff8090', 12); E.sfx('warp'); E.removeEnt(vera);
-    await E.say('鐵騎士', L('……入侵者……確認。排除。', '...Intruders... confirmed. Eliminate.'));
-    if (E.has('barton')) await E.say('巴頓', L('那個握劍的姿勢……不會錯。隊長！是我啊，巴頓！', "That grip on the sword... There's no mistaking it. Captain! It's me, Barton!"));
-    await E.say('凱', L('……爸爸？', '...Dad?'));
-    await E.say('鐵騎士', L('……排除。', '...Eliminate.'));
-    const r = await E.battle(TROOPS.boss2, { boss: true, bg: 'tower' });
+    await E.say('搖籃', L('妳來了，露米。把種子給我，我們就是一家人了。', 'You came, Lumi. Give me the seeds, and we will be a family.'));
+    await E.say('露米', L('……媽媽，露米已經不是一個人了。', '...Mama, Lumi isn\'t alone any more.'));
+    await E.say('露米', L('朔會替露米生氣，蘭會替露米哭，爺爺會替露米擋在前面。這就是露米的家人。', 'Saku gets angry for Lumi. Ran cries for Lumi. Grandpa stands in front of Lumi. That is Lumi\'s family.'));
+    await E.say('露米', L('露米要種的，是會枯萎、會凋謝、明年還會再開的花。', 'What Lumi wants to plant are flowers that wither and fall and bloom again next year.'));
+    await E.say('搖籃', L('……那我就只好，把你們全都變成水晶了。', '...Then I will have to turn you all to crystal.'));
+    const r = await E.battle(['cradle'], { boss: true, bg: 'roof', music: 'final' });
     if (r !== 'win') return;
-    S.flags.seren = true;
-    E.removeEnt('seren');
-    E.music(null);
-    const leon = E.spawn({ type: 'npc', id: 'leon', sprite: 'leon', x: 11, y: 4, dir: 'd' });
-    E.sfx('hit'); E.shake(10);
-    await E.wait(40);
-    await E.say(null, L('鐵騎士的頭盔裂開了。底下，是一張和凱很像的臉。', "The Iron Knight's helmet cracks open. Beneath it is a face very like Kai's."));
-    E.music('farewell');
-    await E.walk(leon, 'd');
-    await E.say('雷昂', L('……凱？是凱吧。……你長這麼高了啊。', "...Kai? It is Kai, isn't it. ...You've grown so tall."));
-    await E.say('凱', L('爸……爸爸……！', 'D... Dad...!'));
-    await E.say('雷昂', L('對不起。我說過粥涼之前就回去的。……讓你和你媽媽，等了十年。', "I'm sorry. I said I'd be back before the porridge cooled. ...I made you and your mother wait ten years."));
-    await E.say('凱', L('回家吧！媽媽一直在等你！我們一起回去──', "Come home! Mum's been waiting all this time! Let's go back together──"));
-    await E.say('雷昂', L('……我的身體，已經是方舟的一部分了。核心倒下的時候，我也會一起消失。', '...My body is part of the Ark now. When the core falls, I will go with it.'));
-    await E.say('雷昂', L('能在最後清醒過來，見到你，已經是星星給我的禮物了。', 'Waking up at the end, and seeing you... that is already a gift from the stars.'));
-    if (E.has('barton')) {
-      await E.say('雷昂', L('巴頓。謝謝你划回去。你做了我拜託你的事。', 'Barton. Thank you for rowing back. You did what I asked of you.'));
-      await E.say('巴頓', L('隊長……我……我……！', 'Captain... I... I...!'));
-      await E.say('雷昂', L('別哭了，老傢伙。替我看著這孩子。', "Don't cry, you old fool. Watch over the boy for me."));
-    }
-    if (E.has('io')) {
-      await E.say('雷昂', L('艾歐，妳醒了啊。……妳從來就不是什麼鑰匙。妳只是一個想看看早晨的孩子。', "Io, you're awake. ...You were never a key. You were only a child who wanted to see the morning."));
-      await E.say('艾歐', L('雷昂……你的兒子，真的來接我了。', 'Leon... your son really did come for me.'));
-    }
-    await E.say('雷昂', L('凱，收下我的劍吧。用它，保護那些溫暖的東西。', 'Kai, take my sword. Use it to protect the things that are warm.'));
-    E.give('tideblade', 1); E.sfx('chest');
-    await E.say(null, L('得到了雷昂之劍！', "Received Leon's Sword!"));
-    await E.say('雷昂', L('還有……幫我告訴你媽媽。那天晚上的星星，真的很美。', 'And... tell your mother for me. The stars that night were truly beautiful.'));
-    E.sfx('holy'); E.flash('#ffffff', 40);
-    E.removeEnt(leon);
-    await E.wait(60);
-    await E.say(null, L('雷昂化成了無數的光點，像流星雨一樣，緩緩地升上了塔頂。', 'Leon breaks into countless motes of light that drift slowly up the tower, like a meteor shower.'));
-    await E.wait(30);
-    await E.say('妮雅', L('……凱。', '...Kai.'));
-    await E.say('凱', L('……我沒事。爸爸幫我們開了這條路。走吧，去把一切結束。', "...I'm all right. Dad opened this road for us. Let's go and end it."));
-    E.openGates('seren');
-    E.music('tower');
+    S.flags.boss5 = true;
+    await SCRIPTS.va_after(E);
   },
-
-  // ---------- 合: the heart of the Ark ----------
-  async ordath(E) {
-    if (S.flags.ordath) return;
-    E.music(null);
-    E.sfx('quake'); E.shake(50);
-    await E.wait(60);
-    const vera = E.spawn({ type: 'npc', id: 'vera', sprite: 'herald', x: 12, y: 4, dir: 'l' });
-    await E.say('薇拉', L('妳來了，妹妹。', 'You came, sister.'));
-    await E.say('伊吉斯', L('艾歐。歸位。沉睡者必須甦醒。這顆星球的生物，將被清除。', "IO. RETURN TO YOUR SLOT. THE SLEEPERS MUST WAKE. THIS PLANET'S LIFE WILL BE CLEARED."));
-    await E.say('艾歐', L('不。沉睡者可以醒來，但要在一個願意對他們說「歡迎」的世界醒來。不是在別人的墳墓上。', 'No. The sleepers may wake, but on a world that says "welcome" to them. Not on top of other people\'s graves.'));
-    await E.say('薇拉', L('……妹妹。妳真的相信，人類會願意分享嗎？', '...Sister. Do you truly believe the humans would share?'));
-    await E.say('妮雅', L('我們已經分享過了！她在凱的家，和我們吃了同一鍋粥！', "We already have! She ate from the same pot of porridge as us, at Kai's home!"));
-    await E.say('薇拉', L('……同一鍋……粥？', '...The same pot... of porridge?'));
-    await E.say('伊吉斯', L('薇拉。排除他們。', 'VERA. ELIMINATE THEM.'));
-    await E.wait(30);
-    await E.say('薇拉', L('……不要。', '...No.'));
-    await E.say('伊吉斯', L('錯誤。錯誤。全部排除。', 'ERROR. ERROR. ELIMINATE ALL.'));
-    E.removeEnt(vera);
-    const r = await E.battle(TROOPS.boss3, { boss: true, bg: 'roof', music: 'final' });
-    if (r !== 'win') return;
-    S.flags.ordath = true;
-    await SCRIPTS.farewell(E);
-    await E.ending();
-  },
-  // Io stays behind
-  async farewell(E) {
+  async va_after(E) {
     E.music(null);
     E.shake(40); E.sfx('boom');
-    await E.say('伊吉斯', L('……錯……誤……沉睡者的……夢……', '...ER...ROR... THE SLEEPERS\'... DREAM...'));
-    for (let i = 0; i < 3; i++) { E.flash('#ffffff', 10); E.sfx('boom'); E.shake(20); await E.wait(24); }
-    E.removeEnt('ordath');
-    await E.wait(30);
-    E.shake(90); E.sfx('quake');
+    for (let i = 0; i < 3; i++) { E.flash('#ffffff', 10); E.sfx('boom'); await E.wait(24); }
+    E.removeEnt('cradle');
+    E.music('farewell');
     E.solo(true);
     const p = E.p;
-    const nia = actor(E, 'nia', p.x - 1, p.y, 'u'), bart = actor(E, 'barton', p.x + 1, p.y, 'u'), io = actor(E, 'io', p.x, p.y - 2, 'd');
-    const vera = E.spawn({ type: 'npc', id: 'vera2', sprite: 'herald', x: p.x + 2, y: p.y - 3, dir: 'l' });
-    await E.say('巴頓', L('塔在下沉！再這樣下去，整片海岸都會被大浪吞掉！', "The tower's sinking! At this rate a great wave will swallow the whole coast!"));
-    await E.say('艾歐', L('……核心沒有了，方舟正在墜落。如果沒有人從裡面控制，港口會被淹沒。', '...The core is gone, and the Ark is falling. If no one guides it from inside, the harbour will drown.'));
-    await E.say('艾歐', L('我是鑰匙。只要我進入方舟的心臟，就能讓它慢慢地沉進海底，永遠沉睡。', 'I am the key. If I go into the heart of the Ark, I can let it sink slowly to the sea floor and sleep forever.'));
-    E.music('farewell');
-    await E.say('凱', L('不行！一定還有別的辦法！', 'No! There has to be another way!'));
-    await E.say('艾歐', L('凱。十年前，雷昂為我選擇了這條路。現在，換我為你們選擇。', 'Kai. Ten years ago, Leon chose this road for me. Now it is my turn to choose it for you.'));
-    await E.say('薇拉', L('……妳不會是一個人的，妹妹。我陪妳。', "...You won't be alone, sister. I'll stay with you."));
-    await E.say('艾歐', L('薇拉……謝謝妳。', 'Vera... thank you.'));
-    await E.say('妮雅', L('艾歐……妳說過，妳不知道什麼是溫暖……', 'Io... you said you didn\'t know what "warm" was...'));
-    await E.say('艾歐', L('我現在知道了。溫暖，就是有人在等你回來。', 'I know now. Warm is when someone is waiting for you to come home.'));
-    await E.say('艾歐', L('所以……請等我。就算要等很久很久，也請等我。', 'So... please wait for me. Even if it is a very, very long time, please wait.'));
-    await E.say('妮雅', L('嗯……！我會等。每天晚上，我都會對著星星說「晚安」。', 'Mm...! I\'ll wait. Every night, I\'ll say "good night" to the stars.'));
-    await E.say('艾歐', L('巴頓。請划回去。這一次，是正確的事。', 'Barton. Please row back. This time, it is the right thing.'));
-    await E.say('巴頓', L('……知道了。我划。我一定把他們平安帶回去。', "...Aye. I'll row. I'll bring them home safe, I swear it."));
-    await E.say('艾歐', L('凱。……粥涼之前，你要回家喔。', 'Kai. ...Go home before the porridge cools.'));
-    await E.say('凱', L('……艾歐！', '...Io!'));
-    await E.walk(io, 'u');
-    io.dir = 'd';
-    await E.say('艾歐', L('謝謝你們，讓我看見了早晨。', 'Thank you, all of you, for letting me see the morning.'));
-    E.sfx('holy'); E.flash('#ffffff', 50);
-    E.removeEnt(io); E.removeEnt(vera);
-    E.leave('io');
+    const lumi = actor(E, 'lumi', p.x, p.y - 1, 'u', 'lumi');
+    const rei = actor(E, 'rei', p.x, p.y - 4, 'd', 'rei');
+    E.sfx('holy'); E.flash('#c0f8ff', 40);
+    await E.wait(40);
+    await E.say('玲', L('……露米？是露米嗎？妳……長大了呢。', '...Lumi? Is that you, Lumi? You... have grown.'));
+    await E.say('露米', L('媽媽！', 'Mama!'));
+    await E.say('玲', L('對不起。三百年太長了，我在黑暗裡迷路了。……謝謝你們，把我帶回來。', "I'm sorry. Three hundred years was too long. I lost my way in the dark. ...Thank you, all of you, for bringing me back."));
+    await E.say('玲', L('露米，有件事我一直想跟妳說。妳不是小空的影子。', "Lumi, there's something I always wanted to tell you. You are not Sora's shadow."));
+    await E.say('玲', L('妳是我的第二個女兒。', 'You are my second daughter.'));
+    await E.say('露米', L('……嗯。露米知道。因為媽媽一直都捨不得糾正露米。', "...Mm. Lumi knows. Because Mama could never bring herself to correct Lumi."));
+    await E.say('玲', L('搖籃剩下的能量，足夠讓種子庫運作，也足夠讓天空裡的星石粉塵散去。', "What is left of Cradle's power is enough to run the vault, and to clear the starstone dust from the sky."));
+    await E.say('朔', L('那妳會怎麼樣？', 'And what happens to you?'));
+    await E.say('玲', L('……我已經在天上待了三百年了。也該下來，在花田裡睡一覺了。', "...I have been in the sky for three hundred years. It's time I came down and slept in a flower field."));
+    await E.say('玲', L('露米，種下去吧。全部。', 'Plant them, Lumi. All of them.'));
+    E.sfx('holy'); E.flash('#ffffff', 60);
+    E.removeEnt(rei);
     await E.wait(60);
-    E.removeEnt(nia); E.removeEnt(bart); E.solo(false);
+    await E.say(null, L('種子庫的穹頂打開了。\n三百年來第一次，陽光直直地照了進來。', 'The dome of the Seed Vault opens.\nFor the first time in three hundred years, sunlight pours straight in.'));
+    E.removeEnt(lumi); E.solo(false);
+    S.flags.ending = true;
+    await E.ending();
+  },
+  // the epilogue in Railtown, a spring later
+  async epilogue(E) {
+    await E.say(null, L('──一年後，鐵軌鎮。', '── One year later. Railtown.'));
+    await E.say('泰絲婆婆', L('看哪，孩子們。鐵軌之間，長滿了麥子。', 'Look, children. Wheat is growing between the tracks.'));
+    await E.say('男孩', L('朔哥哥！天空是藍色的！婆婆說的是真的！', "Saku! The sky is blue! Granny was telling the truth!"));
+    if (E.has('gears')) await E.say('老齒輪', L('……我這把年紀，還要學種田。哼，也不壞。', '...At my age, learning to farm. Hmph. Not bad.'));
+    if (E.has('ran')) await E.say('蘭', L('姊姊在教團的廢墟裡開了一間學校喔。教大家修東西、種東西。', 'My sister started a school in the church ruins. She teaches everyone to fix things and grow things.'));
+    await E.say('露米', L('朔，你看。', 'Saku, look.'));
+    await E.say('朔', L('嗯。……天空是藍的。', 'Yeah. ...The sky is blue.'));
+    await E.say('露米', L('媽媽，天空變藍了喔。露米，把種子都種下去了。', 'Mama, the sky is blue now. Lumi planted all the seeds.'));
+    await E.say(null, L('風吹過麥田，像是有人在輕輕地回答。', 'The wind runs through the wheat, like someone softly answering.'));
   },
 };

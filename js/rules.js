@@ -31,8 +31,8 @@ export function foeAction(foe, round) {
   const def = ENEMIES[foe.id];
   let acts = def.acts || [['atk', 1]];
   // the final boss turns to its strongest wave every third round once wounded
-  if (foe.id === 'ordath' && foe.hp < foe.maxhp * 0.5 && round % 3 === 0) return 'abyss';
-  if (foe.id === 'seren' && foe.hp < foe.maxhp * 0.35 && round % 4 === 0) return 'tide';
+  if (foe.id === 'cradle' && foe.hp < foe.maxhp * 0.5 && round % 3 === 0) return 'abyss';
+  if (foe.id === 'bishop' && foe.hp < foe.maxhp * 0.35 && round % 4 === 0) return 'tide';
   const total = acts.reduce((s, [, w]) => s + w, 0);
   let r = Math.random() * total;
   for (const [a, w] of acts) { r -= w; if (r <= 0) return a; }

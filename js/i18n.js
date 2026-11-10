@@ -33,9 +33,9 @@ export function localize(table, en, fields = ['name', 'desc']) {
 
 // speaker names in dialogue
 const NAMES = {
-  凱: 'Kai', 妮雅: 'Nia', 巴頓: 'Barton', 艾歐: 'Io', 薇拉: 'Vera', 雷昂: 'Leon', 鐵騎士: 'Iron Knight', 伊吉斯: 'Aegis', 老兵: 'Old Soldier',
-  母親: 'Mother', 守衛: 'Guard', 小女孩: 'Girl', 男孩: 'Boy', 老漁夫: 'Old Fisher', 水手: 'Sailor', 鎮上的婦人: 'Townswoman',
-  老爺爺: 'Old Man', 村長夫人: "Mayor's Wife", 旅人: 'Traveller', 老闆: 'Innkeeper', 修女: 'Sister', 村長: 'Mayor', 漁夫: 'Fisherman',
-  '？？？': '???', 店員: 'Clerk',
+  朔: 'Saku', 蘭: 'Ran', 老齒輪: 'Old Gears', 露米: 'Lumi', 玲: 'Rei', 薇伊: 'Vey', 搖籃: 'Cradle', 哈爾艦長: 'Captain Hale', 工程師小野: 'Engineer Ono',
+  泰絲婆婆: 'Granny Tess', 瑪格婆婆: 'Granny Mag', 教團騎士: 'Church Knight', 教團士兵: 'Church Soldier', 男孩: 'Boy', 小女孩: 'Girl', 拾荒者: 'Scavenger',
+  廚娘: 'Cook', 守望者: 'Lookout', 臥鋪車長: 'Bunk Master', 議員: 'Councillor', 農夫: 'Farmer', 旅店老闆: 'Innkeeper', 販賣機器人: 'Vending Robot',
+  白衣的修女: 'Sister in White', 霓虹巨像: 'Neon Colossus', 被關的孩子: 'Captive Child', 鐵之主教: 'The Iron Bishop', '？？？': '???', 店員: 'Clerk',
 };
 export const speaker = (n) => (n && LANG === 'en' ? NAMES[n] || n : n);

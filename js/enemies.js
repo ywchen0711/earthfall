@@ -1,6 +1,7 @@
 // Battle art for every monster, painted from lit blobs, plus small field sprites for the ones
 // that walk around in dungeons.
 import { Painter, ramp, canvas } from './gfx.js';
+import { hasPix, pixArt, pixMini } from './pixmon.js';
 
 const K = '#100818', WHITE = '#ffffff';
 const eye = (p, x, y, col = K, glint = true, h = 2) => { for (let i = 0; i < h; i++) p.px(x, y + i, col); if (glint) p.px(x, y, WHITE); };
@@ -270,10 +271,96 @@ const ART = {
     return p.finish({ out: '#080a14', inner: 3 });
   },
 
+  // ---------- Saga of a Thousand Winds ----------
+  wolf() {
+    const p = new Painter(64, 48), F = ramp('#8890a8', 6), D = ramp('#4a5068', 5), E = ['#401010', '#c02818', '#f86030', '#f8e0a0'];
+    p.poly([[10, 22], [0, 14], [4, 26]], F, { z: -2, lum: 0.5 });
+    p.tube([[18, 34, 3.4, 0], [16, 46, 2.8, 0]], D); p.tube([[44, 34, 3.4, 0], [46, 46, 2.8, 0]], D);
+    p.ball(32, 28, 20, 11, F, { z: 2, spec: 0.3 });
+    p.tube([[24, 34, 3.6, 6], [22, 46, 3, 6]], F); p.tube([[50, 32, 3.6, 6], [52, 46, 3, 6]], F);
+    p.ball(52, 20, 9, 8, F, { z: 10 });
+    p.poly([[56, 18], [64, 22], [58, 27]], F, { z: 12, lum: 0.6 });
+    p.poly([[46, 14], [48, 2], [52, 13]], D, { z: 12, lum: 0.6 }); p.poly([[53, 13], [56, 2], [58, 14]], F, { z: 13, lum: 0.7 });
+    p.ball(55, 18, 1.6, 1.6, E, { z: 20, amb: 0.9 });
+    p.dots([[60, 26], [58, 27]], '#ffffff');
+    return p.finish();
+  },
+  golem() {
+    const p = new Painter(72, 76), S = ramp('#c8a060', 6), D = ramp('#8a6838', 5), G = ['#105060', '#20a0c0', '#60e8f0', '#e0ffff'];
+    p.tube([[26, 54, 7, 0], [24, 72, 7, 0]], D); p.tube([[46, 54, 7, 0], [48, 72, 7, 0]], D);
+    p.ball(36, 40, 22, 20, S, { z: 2, spec: 0.2 });
+    p.tube([[14, 30, 8, 8], [8, 50, 7, 10], [10, 62, 8, 12]], S); p.tube([[58, 30, 8, 8], [64, 50, 7, 10], [62, 62, 8, 12]], S);
+    p.ball(36, 16, 12, 10, S, { z: 10 });
+    for (const [x, y] of [[26, 34], [44, 46], [34, 58]]) p.ball(x, y, 4, 3, D, { z: 24 });
+    p.ball(31, 15, 2.5, 2, G, { z: 26, amb: 0.9 }); p.ball(41, 15, 2.5, 2, G, { z: 26, amb: 0.9 });
+    p.ball(36, 40, 4, 4, G, { z: 30, amb: 0.8 });
+    return p.finish();
+  },
+  yeti() {
+    const p = new Painter(72, 76), F = ramp('#e8ecf8', 6), Sk = ramp('#8898b8', 5), E = ['#102040', '#2060a0', '#60b0f0', '#e0f8ff'];
+    p.tube([[26, 56, 8, 0], [24, 74, 8, 0]], F); p.tube([[46, 56, 8, 0], [48, 74, 8, 0]], F);
+    p.ball(36, 42, 24, 22, F, { z: 2 });
+    p.tube([[12, 30, 9, 8], [6, 52, 8, 10], [10, 66, 9, 12]], F); p.tube([[60, 30, 9, 8], [66, 52, 8, 10], [62, 66, 9, 12]], F);
+    p.ball(36, 18, 14, 12, F, { z: 12 });
+    p.ball(36, 22, 9, 7, Sk, { z: 22 });
+    p.ball(31, 18, 2, 2, E, { z: 30, amb: 0.9 }); p.ball(41, 18, 2, 2, E, { z: 30, amb: 0.9 });
+    p.dots([[33, 26], [34, 26], [38, 26], [39, 26]], '#ffffff');
+    return p.finish({ out: '#202838' });
+  },
+  brigand() {
+    const p = new Painter(64, 84), Sk = ramp('#e0a878', 5), C = ramp('#7a3828', 6), L = ramp('#4a3828', 5), M = ramp('#c8d0e0', 5), H = ramp('#302018', 5);
+    p.tube([[24, 56, 6, 0], [22, 82, 5.5, 0]], L); p.tube([[40, 56, 6, 0], [42, 82, 5.5, 0]], L);
+    p.ball(32, 42, 16, 18, C, { z: 4 });
+    p.ball(32, 56, 15, 4, ramp('#3a2818', 4), { z: 10 });
+    p.tube([[18, 30, 5, 10], [10, 44, 4.5, 14], [6, 30, 4, 16]], C); p.tube([[46, 30, 5, 10], [54, 44, 4.5, 14], [56, 56, 4, 16]], C);
+    p.tube([[6, 32, 1.6, 30], [8, 2, 1, 30]], M); p.tube([[1, 30, 1.2, 32], [11, 30, 1.2, 32]], ramp('#c0a040', 3));
+    p.ball(32, 16, 10, 11, Sk, { z: 14 });
+    p.ball(32, 9, 11, 6, H, { z: 18, cut: (u, v) => v > 0.5 });
+    p.ball(32, 24, 8, 4, H, { z: 20 });
+    p.dots([[28, 16], [36, 16]], '#201010'); p.dots([[26, 14], [27, 14], [28, 14], [29, 14], [30, 14]], '#201010');
+    return p.finish();
+  },
+  witch(c = '#482868') { return ART.seren(); },
+  sandking() {
+    const p = new Painter(140, 120), G = ramp('#d0a040', 6), D = ramp('#8a6020', 6), Cl = ramp('#e8d8b0', 5), E = ['#401008', '#c02818', '#f86030', '#f8e0a0'];
+    p.poly([[40, 40], [100, 40], [120, 118], [20, 118]], ramp('#a83828', 6), { z: -2, lum: 0.5, grad: 0.5 });
+    p.ball(70, 70, 28, 34, Cl, { z: 4 });
+    p.ball(70, 56, 24, 12, G, { z: 10, spec: 0.5 });
+    p.tube([[46, 50, 7, 12], [32, 72, 6, 14], [36, 92, 6, 16]], Cl); p.tube([[94, 50, 7, 12], [110, 70, 6, 14], [114, 52, 6, 16]], Cl);
+    p.tube([[118, 6, 2.4, 24], [110, 116, 2.4, 24]], G); p.ball(118, 8, 7, 7, ramp('#40d8c8', 4), { z: 30, spec: 0.8 });
+    p.ball(70, 30, 15, 16, ramp('#6a4a30', 5), { z: 16 });
+    p.poly([[52, 22], [70, -2], [88, 22], [84, 30], [56, 30]], G, { z: 22, lum: 0.7, grad: 0.4 });
+    p.ball(70, 14, 3, 3, ramp('#40d8c8', 4), { z: 30, spec: 0.8 });
+    p.ball(64, 32, 2.4, 2, E, { z: 30, amb: 0.9 }); p.ball(76, 32, 2.4, 2, E, { z: 30, amb: 0.9 });
+    return p.finish({ out: '#180c04' });
+  },
+  nul() {
+    const p = new Painter(170, 132), V = ramp('#d8dce8', 6), D = ramp('#383c58', 6), Ey = ['#101018', '#304060', '#80a0d0', '#e8f0ff'];
+    // the halo of still air behind it
+    const ring = []; for (let a = 0; a <= 36; a++) { const t = (a / 36) * Math.PI * 2; ring.push([85 + Math.cos(t) * 76, 52 + Math.sin(t) * 46, 2.2, -10]); }
+    p.tube(ring, ramp('#a8b0d0', 4));
+    // robe
+    p.poly([[56, 50], [114, 50], [140, 130], [30, 130]], D, { z: 0, lum: 0.5, grad: 0.6 });
+    p.poly([[74, 50], [96, 50], [104, 130], [66, 130]], ramp('#585c80', 5), { z: 2, lum: 0.6 });
+    // arms held wide, as if to stop the wind
+    p.tube([[60, 56, 6, 6], [36, 60, 5, 8], [14, 48, 4, 10]], V); p.tube([[110, 56, 6, 6], [134, 60, 5, 8], [156, 48, 4, 10]], V);
+    p.ball(12, 46, 6, 6, V, { z: 12 }); p.ball(158, 46, 6, 6, V, { z: 12 });
+    // a mask without a mouth
+    p.ball(85, 34, 20, 24, V, { z: 14, spec: 0.5 });
+    p.ball(77, 32, 4, 3, Ey, { z: 32, amb: 0.9 }); p.ball(93, 32, 4, 3, Ey, { z: 32, amb: 0.9 });
+    p.poly([[70, 8], [85, -2], [100, 8], [96, 14], [74, 14]], ramp('#f0e8c0', 5), { z: 30, lum: 0.7 });
+    for (const [x, y] of [[40, 100], [130, 100], [85, 118], [20, 24], [150, 24]]) p.ball(x, y, 3, 3, ramp('#e8f0ff', 4), { z: 40, amb: 0.9 });
+    return p.finish({ out: '#080a14', inner: 3 });
+  },
 };
 
 // small 16x16 walkers for dungeon maps
 const MINI = {
+  wolf() { const p = new Painter(18, 14), F = ramp('#8890a8', 5); p.ball(8, 8, 6, 4, F, { z: 1 }); p.ball(14, 5, 3.5, 3, F, { z: 3 }); p.poly([[13, 3], [14, -1], [16, 3]], F, { z: 4, lum: 0.6 }); p.tube([[4, 11, 1, 0], [4, 14, 1, 0]], F); p.tube([[11, 11, 1, 0], [11, 14, 1, 0]], F); p.dots([[15, 5]], '#f03828'); return p.finish(); },
+  golem() { const p = new Painter(16, 18), S = ramp('#c8a060', 5); p.ball(8, 10, 6, 6, S, { z: 1 }); p.ball(8, 4, 3.5, 3, S, { z: 3 }); p.dots([[7, 4], [9, 4]], '#60e8f0'); return p.finish(); },
+  yeti() { const p = new Painter(16, 18), F = ramp('#e8ecf8', 5); p.ball(8, 10, 6, 6, F, { z: 1 }); p.ball(8, 4, 4, 3.5, F, { z: 3 }); p.dots([[7, 4], [9, 4]], '#2060a0'); return p.finish({ out: '#202838' }); },
+  jelly() { const p = new Painter(16, 14), R = ramp('#58c858', 5); p.ball(8, 9, 7, 5, R, { spec: 0.5, cut: (u, v) => v > 0.8 }); p.dots([[6, 8], [10, 8]], K); return p.finish(); },
+  bird() { const p = new Painter(16, 14), R = ramp('#e0c070', 5); p.ball(8, 8, 5, 4, R, { z: 1 }); p.poly([[8, 7], [1, 2], [3, 9]], ramp('#c07838', 4), { z: 3, lum: 0.6 }); p.dots([[11, 6]], K); return p.finish(); },
   drone() { const p = new Painter(16, 16), M = ramp('#8890a8', 5); p.poly([[5, 7], [0, 4], [1, 10]], ramp('#4a5068', 4), { lum: 0.5 }); p.poly([[11, 7], [16, 4], [15, 10]], ramp('#4a5068', 4), { lum: 0.5 }); p.ball(8, 8, 5, 5, M, { z: 2, spec: 0.6 }); p.ball(8, 14, 2, 1.5, ['#802008', '#e06010', '#f8b030', '#f8f0a0'], { amb: 0.8 }); p.dots([[8, 8]], '#f03828'); p.dots([[7, 7]], '#ffffff'); return p.finish(); },
   bat() { const p = new Painter(18, 14), B = ramp('#6a4890', 5); p.poly([[9, 6], [1, 2], [0, 8], [4, 7], [6, 11]], B, { lum: 0.5 }); p.poly([[9, 6], [17, 2], [18, 8], [14, 7], [12, 11]], B, { lum: 0.5 }); p.ball(9, 7, 3, 3.5, B, { z: 3 }); p.dots([[8, 6], [10, 6]], '#f83030'); return p.finish(); },
   crab() { const p = new Painter(18, 14), R = ramp('#b85838', 5); p.ball(9, 9, 7, 4, R, { z: 1 }); p.ball(2.5, 5, 2.5, 2.5, R, { z: 3 }); p.ball(15.5, 5, 2.5, 2.5, R, { z: 3 }); p.dots([[7, 6], [11, 6]], K); return p.finish(); },
@@ -286,13 +373,46 @@ const MINI = {
 };
 
 const cache = new Map();
-export function enemyArt(key) {
-  if (!cache.has(key)) cache.set(key, ART[key]());
-  return cache.get(key);
+// a family's stronger members are the same picture in other colours, like the 16-bit palette swaps
+function recolor(src, hue = 0, sat = 1) {
+  const c = canvas(src.width, src.height);
+  c.x.drawImage(src, 0, 0);
+  const id = c.x.getImageData(0, 0, src.width, src.height), d = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (!d[i + 3]) continue;
+    let r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+    if (mx - mn < 0.06) continue; // keep outlines, greys and whites
+    const dd = mx - mn, sv = l > 0.5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+    let h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4;
+    h = (h * 60 + hue) % 360; if (h < 0) h += 360;
+    const s2 = Math.min(1, sv * sat), q = l < 0.5 ? l * (1 + s2) : l + s2 - l * s2, pp = 2 * l - q;
+    const f = (t) => { t = (t + 1) % 1; return t < 1 / 6 ? pp + (q - pp) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? pp + (q - pp) * (2 / 3 - t) * 6 : pp; };
+    d[i] = Math.round(f(h / 360 + 1 / 3) * 255); d[i + 1] = Math.round(f(h / 360) * 255); d[i + 2] = Math.round(f(h / 360 - 1 / 3) * 255);
+  }
+  c.x.putImageData(id, 0, 0);
+  return c;
 }
-export function miniArt(key) {
-  const k = 'mini:' + key;
-  if (!cache.has(k)) cache.set(k, MINI[key] ? MINI[key]() : enemyArt(key));
+export function enemyArt(key, hue = 0, sat = 1) {
+  const k = key + '|' + hue + '|' + sat;
+  // hand-drawn art first; the painted shapes are only a fallback
+  if (!cache.has(k)) cache.set(k, hue || sat !== 1 ? recolor(enemyArt(key), hue, sat) : hasPix(key) ? pixArt(key) : ART[key]());
+  return cache.get(k);
+}
+export function miniArt(key, hue = 0, sat = 1) {
+  const k = 'mini:' + key + '|' + hue + '|' + sat;
+  if (!cache.has(k)) cache.set(k, hue || sat !== 1 ? recolor(miniArt(key), hue, sat) : hasPix(key) ? pixMini(key) : MINI[key] ? MINI[key]() : enemyArt(key));
+  return cache.get(k);
+}
+// bosses are drawn twice as large in battle, every pixel doubled
+export function bossArt(key, hue = 0, sat = 1) {
+  const k = 'boss:' + key + '|' + hue + '|' + sat;
+  if (!cache.has(k)) {
+    const a = enemyArt(key, hue, sat);
+    if (!hasPix(key)) { cache.set(k, a); return a; }
+    const c = canvas(a.width * 2, a.height * 2); c.x.imageSmoothingEnabled = false; c.x.drawImage(a, 0, 0, c.width, c.height);
+    cache.set(k, c);
+  }
   return cache.get(k);
 }
 export const ART_KEYS = Object.keys(ART);

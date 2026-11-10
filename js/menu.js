@@ -20,7 +20,7 @@ function drawParty(x, y, w, sel = -1) {
     text(m.name, x + 30, yy, '#f8f8f8');
     text('Lv ' + m.lv, x + w - 8, yy, '#f8e070', { align: 'right' });
     text(`HP ${m.hp}/${s.maxhp}`, x + 30, yy + 13, m.hp <= 0 ? '#f86060' : m.hp < s.maxhp / 4 ? '#f8e070' : '#f8f8f8');
-    text(`MP ${m.mp}/${s.maxmp}`, x + 30, yy + 25, '#c0d0f8');
+    text(`EP ${m.mp}/${s.maxmp}`, x + 30, yy + 25, '#c0d0f8');
     if (m.status.poison) text(L('毒', 'PSN'), x + w - 8, yy + 13, '#c080f8', { align: 'right' });
   });
 }
@@ -92,7 +92,7 @@ async function magicMenu() {
   if (!caster) return;
   for (;;) {
     const list = spellsOf(caster);
-    const r = await menu(list.map((id) => ({ label: SPELLS[id].name, right: SPELLS[id].mp, disabled: !['heal', 'healall', 'cure', 'revive'].includes(id) || SPELLS[id].mp > caster.mp })), { x: 96, y: 40, w: 150, title: `${caster.name}　MP ${caster.mp}` });
+    const r = await menu(list.map((id) => ({ label: SPELLS[id].name, right: SPELLS[id].mp, disabled: !['heal', 'healall', 'cure', 'revive'].includes(id) || SPELLS[id].mp > caster.mp })), { x: 96, y: 40, w: 150, title: `${caster.name}　EP ${caster.mp}` });
     if (r < 0) return;
     const sp = SPELLS[list[r]], st = stats(caster);
     if (sp.target === 'allies') { caster.mp -= sp.mp; for (const m of S.members) if (m.hp > 0) m.hp = Math.min(stats(m).maxhp, m.hp + healAmount(sp.power, sp.k, st)); sfx('heal'); continue; }
@@ -150,7 +150,7 @@ async function statusMenu() {
     text(`Lv ${m.lv}`, 38, 28);
     const ex = isEn() ? 150 : 110;
     text(`${L('經驗', 'EXP')} ${m.exp}`, ex, 12); text(`${L('下一級', 'Next')} ${Math.max(0, expFor(m.lv + 1) - m.exp)}`, ex, 28);
-    const rows = [[`HP ${m.hp}/${st.maxhp}`, `MP ${m.mp}/${st.maxmp}`], [`${L('力量', 'STR')} ${st.str}`, `${L('防禦', 'DEF')} ${st.def}`], [`${L('智力', 'INT')} ${st.int}`, `${L('敏捷', 'AGI')} ${st.agi}`], [`${L('攻擊力', 'Attack')} ${st.atk}`, `${L('防禦力', 'Defence')} ${st.dfn}`]];
+    const rows = [[`HP ${m.hp}/${st.maxhp}`, `EP ${m.mp}/${st.maxmp}`], [`${L('力量', 'STR')} ${st.str}`, `${L('防禦', 'DEF')} ${st.def}`], [`${L('智力', 'INT')} ${st.int}`, `${L('敏捷', 'AGI')} ${st.agi}`], [`${L('攻擊力', 'Attack')} ${st.atk}`, `${L('防禦力', 'Defence')} ${st.dfn}`]];
     rows.forEach(([a, b], i) => { text(a, 14, 50 + i * 15); text(b, 130, 50 + i * 15); });
     const en = isEn(), eq = (k) => (m.equip[k] ? ITEMS[m.equip[k]].name : '──');
     if (en) { text('Equipment', 14, 110, '#a0c0f8'); ['weapon', 'armor', 'acc'].forEach((k, i) => text(eq(k), 14 + i * 78, 124)); }

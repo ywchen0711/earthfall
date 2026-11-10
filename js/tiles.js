@@ -344,4 +344,53 @@ export function renderMap(map) {
   }
   return { frames, upper };
 }
+
+// ---------- Earthfall: the orbital station, the ruins of the old world, the rails and the glass desert ----------
+const MET = ['#1c2230', '#2c3446', '#424c62', '#5c6880', '#8a96b0'];
+const CON = ['#3a3c40', '#55585c', '#6e7276', '#8a8e92', '#aeb2b6'];
+const RUST = ['#3a1c10', '#6a3418', '#94502a', '#b87444', '#d8a070'];
+const TEAL = ['#0e2a2a', '#18443e', '#256058', '#3a8070', '#68b8a0'];
+Object.assign(TILES, {
+  // the orbital station Cradle
+  metal: { draw(g, X, Y) { rect(g, 0, 0, 16, 16, MET[2]); rect(g, 0, 0, 16, 1, MET[3]); rect(g, 0, 0, 1, 16, MET[3]); rect(g, 15, 0, 1, 16, MET[1]); rect(g, 0, 15, 16, 1, MET[1]); for (const [x, y] of [[2, 2], [13, 2], [2, 13], [13, 13]]) px(g, x, y, MET[4]); if ((X + Y) % 4 === 0) { rect(g, 5, 7, 6, 2, MET[1]); rect(g, 5, 7, 6, 1, MET[0]); } } },
+  mwall: wallTile(MET, '#0c1018', (g, X, Y) => { rect(g, 0, 0, 16, 16, MET[2]); rect(g, 0, 0, 16, 2, MET[4]); rect(g, 0, 13, 16, 3, MET[0]); rect(g, 0, 12, 16, 1, MET[1]); rect(g, 7, 2, 2, 10, MET[1]); if (X % 2) { rect(g, 3, 5, 3, 2, (X + Y) % 3 ? '#40f0c0' : '#f0b040'); px(g, 3, 5, '#ffffff'); } }),
+  spacewin: { solid: true, draw(g, X, Y) {
+    rect(g, 0, 0, 16, 16, '#02040c');
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const gx = X * 16 + x, gy = Y * 16 + y, d = Math.hypot(gx - 160, (gy - 360) * 1.0);
+      if (d < 330) { const k = hash(gx >> 2, gy >> 2, 5), sea = Math.sin(gx * 0.05) + Math.cos(gy * 0.09 + gx * 0.02) > 0.6; let c = sea ? '#2a7a3a' : '#1c48a0'; if (k > 0.86) c = '#e8f0f8'; if (d > 322) c = '#7ab8f8'; px(g, x, y, c); }
+      else if (hash(gx, gy, 9) > 0.985) px(g, x, y, hash(gx, gy, 3) > 0.5 ? '#ffffff' : '#8890c0');
+    }
+    rect(g, 0, 0, 16, 2, MET[1]); rect(g, 0, 14, 16, 2, MET[1]); rect(g, 0, 0, 1, 16, MET[3]);
+  } },
+  console: { solid: true, draw(g, X, Y) { TILES.metal.draw(g, X, Y); rect(g, 1, 3, 14, 11, '#12161e'); rect(g, 2, 4, 12, 7, '#062a24'); for (let k = 0; k < 4; k++) rect(g, 3, 5 + k * 2, 3 + Math.floor(hash(X, Y, k) * 8), 1, k % 2 ? '#40f0c0' : '#20a080'); rect(g, 3, 12, 2, 1, '#f04040'); rect(g, 7, 12, 2, 1, '#40f040'); rect(g, 11, 12, 2, 1, '#f0b040'); } },
+  pod: { solid: true, draw(g, X, Y) { TILES.metal.draw(g, X, Y); const p = prop('pod', () => { const P = new Painter(16, 16); P.ball(8, 9, 7, 6.5, ramp('#d8e0f0', 5), { spec: 0.6 }); P.ball(8, 7, 4, 3, ramp('#40c8f0', 5), { z: 6, spec: 0.8 }); return P.finish({ out: '#101828' }); }); g.drawImage(p, 0, 0); } },
+  hatch: { draw(g, X, Y) { rect(g, 0, 0, 16, 16, MET[1]); rect(g, 1, 0, 14, 16, MET[3]); rect(g, 7, 0, 2, 16, MET[0]); for (let y = 1; y < 16; y += 4) { rect(g, 1, y, 3, 2, '#f0c040'); rect(g, 12, y, 3, 2, '#f0c040'); } } },
+  // the ruins of the old world
+  asphalt: { draw(g, X, Y) { speckle(g, X, Y, ['#26282c', '#303236', '#3a3c40', '#46484c', '#585a5e'], 2, 0.08); if (hash(X, Y, 41) > 0.7) { let x = Math.floor(hash(X, Y, 42) * 12) + 2; for (let y = 0; y < 16; y++) { px(g, x, y, '#16181a'); if (hash(X * 16 + y, Y, 43) > 0.6) x += hash(X, y, 44) > 0.5 ? 1 : -1; x = Math.max(0, Math.min(15, x)); } } if (Y % 4 === 0 && X % 2 === 0) rect(g, 3, 7, 10, 2, '#a89040'); } },
+  concrete: { draw(g, X, Y) { speckle(g, X, Y, CON, 2, 0.06); rect(g, 0, 0, 16, 1, CON[1]); rect(g, 0, 0, 1, 16, CON[1]); if (hash(X, Y, 51) > 0.75) { const x = 3 + Math.floor(hash(X, Y, 52) * 10); for (let y = 2; y < 14; y++) px(g, x + (y % 3 === 0 ? 1 : 0), y, CON[0]); } } },
+  weeds: { draw(g, X, Y) { TILES.concrete.draw(g, X, Y); const G = PAL.grass; for (let k = 0; k < 9; k++) { const x = Math.floor(hash(X, Y, k + 60) * 15), y = 3 + Math.floor(hash(X, Y, k + 70) * 12); px(g, x, y, G[3]); px(g, x, y - 1, G[4]); px(g, x + 1, y, G[2]); } } },
+  rail: { draw(g, X, Y) { speckle(g, X, Y, ['#4a4038', '#5a5048', '#6a6058', '#7a7068', '#8a8078'], 3, 0.05); for (let x = 1; x < 16; x += 4) rect(g, x, 2, 2, 12, '#5a3a20'); rect(g, 0, 4, 16, 2, '#8a8e98'); rect(g, 0, 4, 16, 1, '#c0c4cc'); rect(g, 0, 10, 16, 2, '#8a8e98'); rect(g, 0, 10, 16, 1, '#c0c4cc'); } },
+  rwall: wallTile(CON, '#202224', (g, X, Y, n, P) => { rect(g, 0, 0, 16, 16, P[2]); for (let y = 2; y < 14; y += 5) rect(g, 0, y, 16, 1, P[1]); rect(g, 0, 13, 16, 3, P[0]); rect(g, 0, 12, 16, 1, P[1]); if (hash(X, Y, 81) > 0.6) { rect(g, 4, 4, 5, 5, P[0]); px(g, 6, 3, RUST[2]); px(g, 6, 2, RUST[3]); } if (hash(X, Y, 82) > 0.7) for (let k = 0; k < 5; k++) px(g, 10 + k % 3, 5 + k, PAL.grass[2]); }),
+  car: { solid: true, draw(g, X, Y, n) { (n && ['concrete', 'weeds'].includes(n(0, 1)) ? TILES.concrete : TILES.asphalt).draw(g, X, Y); const p = prop('car' + (X % 2), () => { const P = new Painter(16, 16), R = ramp(X % 2 ? '#a04a28' : '#4a6a88', 5); P.ball(8, 9, 7.5, 5.5, R, { spec: 0.3 }); P.ball(8, 7, 4.5, 3, ramp('#28303a', 4), { z: 5 }); P.ball(3, 13, 1.6, 1.6, ['#101010', '#202020', '#303030', '#404040'], { z: 1 }); P.ball(13, 13, 1.6, 1.6, ['#101010', '#202020', '#303030', '#404040'], { z: 1 }); return P.finish(); }); g.drawImage(p, 0, 0); for (let k = 0; k < 6; k++) px(g, 2 + Math.floor(hash(X, k, 3) * 12), 4 + Math.floor(hash(Y, k, 4) * 8), RUST[2]); } },
+  pole: { solid: true, draw(g, X, Y) { TILES.asphalt.draw(g, X, Y); rect(g, 7, 2, 2, 13, '#3a3e44'); rect(g, 7, 2, 1, 13, '#5a5e66'); rect(g, 7, 2, 7, 2, '#3a3e44'); rect(g, 12, 4, 2, 2, '#a0a070'); rect(g, 5, 14, 6, 2, '#2a2e34'); } },
+  rubble: { solid: true, draw(g, X, Y) { TILES.concrete.draw(g, X, Y); const p = prop('rub', () => { const P = new Painter(16, 16), R = ramp('#8a8e92', 5); P.ball(6, 10, 5, 4, R, { z: 0 }); P.ball(11, 11, 4, 3, R, { z: 2 }); P.ball(8, 6, 3.5, 3, R, { z: 4 }); return P.finish({ out: '#202224' }); }); g.drawImage(p, 0, 0); px(g, 12, 5, RUST[3]); px(g, 12, 4, RUST[3]); } },
+  // the train carriages people live in
+  troof: { solid: true, draw(g, X, Y, n) { const top = n(0, -1) !== 'troof'; rect(g, 0, 0, 16, 16, TEAL[2]); for (let x = 0; x < 16; x += 4) rect(g, x, 0, 1, 16, TEAL[1]); if (top) { rect(g, 0, 0, 16, 3, TEAL[4]); rect(g, 0, 3, 16, 1, TEAL[3]); } else { rect(g, 0, 13, 16, 3, TEAL[1]); rect(g, 0, 12, 16, 1, TEAL[3]); } if (hash(X, Y, 91) > 0.75) { rect(g, 6, 6, 4, 3, RUST[1]); px(g, 7, 7, RUST[3]); } } },
+  tside: { solid: true, draw(g, X, Y) { rect(g, 0, 0, 16, 16, '#d8ccb0'); rect(g, 0, 0, 16, 2, '#a89c80'); rect(g, 0, 11, 16, 2, '#b84030'); rect(g, 0, 13, 16, 3, '#3a3e44'); rect(g, 3, 3, 10, 6, '#1a2a3a'); rect(g, 3, 3, 10, 1, '#0a141e'); rect(g, 4, 4, 3, 2, '#6a9ac0'); if (hash(X, Y, 93) > 0.6) rect(g, 9, 5, 3, 3, '#f0d070'); } },
+  tdoor: { draw(g, X, Y) { rect(g, 0, 0, 16, 16, '#d8ccb0'); rect(g, 0, 11, 16, 2, '#b84030'); rect(g, 4, 1, 8, 15, '#5a5e66'); rect(g, 5, 2, 6, 14, '#3a3e44'); rect(g, 7, 2, 1, 14, '#202226'); rect(g, 5, 4, 6, 3, '#6a9ac0'); } },
+  // the city of lights that went out
+  neon: wallTile(['#140c1c', '#22142e', '#30203e', '#40305a', '#5a4a7a'], '#0a0612', (g, X, Y) => { rect(g, 0, 0, 16, 16, '#22142e'); rect(g, 0, 13, 16, 3, '#0a0612'); const on = hash(X, Y, 95) > 0.35, c = ['#f048a8', '#48e8f8', '#f8d048'][(X + Y) % 3]; rect(g, 2, 3, 12, 8, '#140a1c'); if (on) { for (let k = 0; k < 3; k++) rect(g, 3 + k * 4, 5, 2, 4, c); rect(g, 3, 4, 10, 1, c); } else { for (let k = 0; k < 3; k++) rect(g, 3 + k * 4, 5, 2, 4, '#3a2a4a'); } }),
+  // the glass desert the falling star left behind
+  glass: { draw(g, X, Y) { speckle(g, X, Y, ['#0c2a30', '#123a40', '#1a4c52', '#286a6a', '#58a8a0'], 3, 0.05); if (hash(X, Y, 97) > 0.6) { const x = Math.floor(hash(X, Y, 98) * 10) + 3; rect(g, x, 3, 1, 4, '#a8f0e0'); rect(g, x + 1, 4, 1, 2, '#58c8b8'); } } },
+  scrystal: { solid: true, draw(g, X, Y) { TILES.glass.draw(g, X, Y); const p = prop('scr' + (X % 2), () => { const P = new Painter(16, 18, { dither: 0.3 }), R = ramp(X % 2 ? '#a060f0' : '#48e8d8', 5); P.poly([[5, 17], [3, 6], [7, 1], [9, 17]], R, { z: 2, lum: 0.7, grad: 0.4 }); P.poly([[8, 17], [11, 5], [14, 9], [13, 17]], R, { z: 1, lum: 0.5, grad: 0.4 }); return P.finish({ out: '#081820' }); }); g.drawImage(p, 0, -2); } },
+  // the world map of a broken Earth
+  osnow: { draw(g, X, Y) { speckle(g, X, Y, ['#98a8c8', '#c0cce0', '#dce4f0', '#eef2fa', '#ffffff'], 3, 0.06); } },
+  oruins: { draw(g, X, Y) { speckle(g, X, Y, CON, 2, 0.05); for (const [x, y, w, h] of [[2, 2, 5, 5], [9, 3, 5, 4], [3, 9, 4, 5], [9, 9, 5, 5]]) { if (hash(X, Y, x + y) > 0.3) { rect(g, x, y, w, h, CON[1]); rect(g, x, y, w, 1, CON[3]); rect(g, x + 1, y + 1, 1, 1, '#f0d070'); } } } },
+  oglass: { draw(g, X, Y) { TILES.glass.draw(g, X, Y); } },
+  ohwy: { draw(g, X, Y) { speckle(g, X, Y, ['#2a2c30', '#34363a', '#3e4044', '#4a4c50', '#5a5c60'], 2, 0.05); rect(g, 7, 0, 2, 16, '#8a8040'); } },
+  ocrater: { solid: true, draw(g, X, Y) { speckle(g, X, Y, ['#1a0c20', '#2a1430', '#3a2040', '#583060', '#8858a0'], 3, 0.08); if (hash(X, Y, 99) > 0.7) { rect(g, 6, 5, 3, 6, '#c088f8'); px(g, 7, 5, '#ffffff'); } } },
+});
+for (const k of ['oruins', 'oglass', 'ohwy']) TILES[k].world = true;
+
 export const solidKind = (k) => !!(TILES[k] && TILES[k].solid);

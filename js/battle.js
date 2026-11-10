@@ -2,7 +2,7 @@
 // stands in front with their status windows, everyone picks a command and the round plays out.
 import { ctx, W, H, canvas, text, textW, windowBox, HAND, HAND_D, tint, bar, ramp, hash, bayer, snes, hex, rgb } from './gfx.js';
 import { sprite } from './sprites.js';
-import { enemyArt } from './enemies.js';
+import { enemyArt, bossArt } from './enemies.js';
 import { ENEMIES, TECHS, SPELLS, SPECIALS, ITEMS, HEROES } from './data.js';
 import { L, isEn } from './i18n.js';
 import { S, stats, spellsOf, gainExp, addItem, count } from './party.js';
@@ -85,7 +85,7 @@ function heroPos(h) { const i = S.members.indexOf(h), b = heroBox(i); return { x
 function foeFighter(f) { const d = ENEMIES[f.id]; return { atk: d.atk, dfn: d.def, int: d.int, agi: d.agi, buffs: f.buffs, defending: false, weak: d.weak, resist: d.resist, undead: d.undead }; }
 function heroFighter(h) { const s = stats(h); return { atk: s.atk, dfn: s.dfn, int: s.int, agi: s.agi, buffs: h.buffs, defending: h.defending }; }
 function layoutFoes() {
-  const list = B.foes, gap = 8;
+  const list = B.foes, sum = list.reduce((s, f) => s + f.art.width, 0), gap = list.length > 1 ? Math.min(8, Math.floor((W - 4 - sum) / (list.length - 1))) : 0;
   const total = list.reduce((s, f) => s + f.art.width, 0) + gap * (list.length - 1);
   let x = Math.round((W - total) / 2);
   for (const f of list) { f.x = x + f.art.width / 2; f.base = ENEMIES[f.id].boss ? 132 : 122; x += f.art.width + gap; }
@@ -96,10 +96,13 @@ export function startBattle(troop, { bg = 'field', boss = false, music, canFlee 
   return new Promise((resolve) => {
     const foes = troop.map((id, i) => {
       const d = ENEMIES[id];
-      return { id, n: i, name: d.name + (troop.filter((t) => t === id).length > 1 ? 'ABCD'[troop.slice(0, i).filter((t) => t === id).length] : ''), hp: d.hp, maxhp: d.hp, art: enemyArt(d.art), status: {}, buffs: {}, flash: 0, shake: 0, die: 0, bob: Math.random() * 6 };
+      return { id, n: i, name: d.name + (troop.filter((t) => t === id).length > 1 ? 'ABCD'[troop.slice(0, i).filter((t) => t === id).length] : ''), hp: d.hp, maxhp: d.hp, art: d.boss ? bossArt(d.art, d.hue, d.sat) : enemyArt(d.art, d.hue, d.sat), status: {}, buffs: {}, flash: 0, shake: 0, die: 0, bob: Math.random() * 6 };
     });
     B = { troop, foes, bg, boss, canFlee: canFlee && !boss, waits: [], pops: [], parts: [], msg: '', round: 0, active: null, shake: 0, flash: 0, flashCol: '#fff', fade: 30, resolve, heroFx: {}, bolt: null, done: false, targeting: null };
     for (const h of S.members) { h.buffs = {}; h.defending = false; h.status = { ...h.status }; delete h.status.sleep; }
+    // hand-drawn monsters are shown at double size whenever the whole group still fits on screen
+    const big = foes.map((f) => (ENEMIES[f.id].boss ? f.art : bossArt(ENEMIES[f.id].art, ENEMIES[f.id].hue, ENEMIES[f.id].sat)));
+    if (big.reduce((s, a) => s + a.width, 0) <= W + 30 && Math.max(...big.map((a) => a.height)) <= 110) foes.forEach((f, i) => { f.art = big[i]; });
     layoutFoes();
     playMusic(music || (boss ? 'boss' : 'battle'), { restart: true });
     run();
@@ -216,7 +219,7 @@ async function commandMenu(h, canBack) {
     if (r === 0) { const t = await pickFoe(); if (t) return { type: 'attack', target: t }; }
     if (r === 1) {
       const list = spellsOf(h);
-      const k = await menu(list.map((id) => ({ label: SPELLS[id].name, right: SPELLS[id].mp, disabled: SPELLS[id].mp > h.mp })), { x: 60, y: 30, w: 140, title: `${h.name}　MP ${h.mp}`, maxRows: 6 });
+      const k = await menu(list.map((id) => ({ label: SPELLS[id].name, right: SPELLS[id].mp, disabled: SPELLS[id].mp > h.mp })), { x: 60, y: 30, w: 140, title: `${h.name}　EP ${h.mp}`, maxRows: 6 });
       if (k < 0) continue;
       const id = list[k], t = await pickTarget(SPELLS[id].target, h);
       if (t !== null) return { type: 'magic', id, target: t };
@@ -589,7 +592,7 @@ export function drawBattle() {
     if (h.status.poison) text(L('毒', 'P'), b.x + b.w - 16, b.y + 4 + oy, '#c080f8');
     text('HP', b.x + 6, b.y + 18 + oy, '#a0c0f8');
     text(String(h.hp), b.x + b.w - 6, b.y + 18 + oy, dead ? '#f86060' : low ? '#f8e070' : '#f8f8f8', { align: 'right' });
-    text('MP', b.x + 6, b.y + 31 + oy, '#a0c0f8');
+    text('EP', b.x + 6, b.y + 31 + oy, '#a0c0f8');
     text(String(h.mp), b.x + b.w - 6, b.y + 31 + oy, '#f8f8f8', { align: 'right' });
     bar(b.x + 6, b.y + 46 + oy, b.w - 12, h.gauge, 100, h.gauge >= 100 && (B.t >> 2) % 2 ? '#ffffff' : '#f0b030');
   });

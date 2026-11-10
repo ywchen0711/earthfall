@@ -1,84 +1,60 @@
 # 星墜地球記 · Earthfall Chronicle
 
-An original top-down RPG in the style of the 16-bit console era, in Traditional Chinese and English. It plays in the browser at the old 256×224 resolution, scaled up with crisp pixels and optional scanlines.
+An original 16-bit style RPG set on a ruined Earth, in Traditional Chinese and English. It plays in the browser at the old 256×224 resolution with crisp pixels and optional scanlines.
 
 **Play:** https://ywchen0711.github.io/earthfall/
 
 ## The story
 
-Ten years ago, a star fell into the eastern sea. Leon, captain of the harbour watch, sailed out to see it and never came home.
+**AD 2091.** Finis, an asteroid twelve kilometres wide, is about to hit the Earth. You begin aboard the orbital station Cradle as Dr. Rei, a botanist. With forty minutes left, she loads a seed of every plant on Earth into Lumi, a little seed-keeper robot built from the memories of her daughter Sora, who died at nine. She sends Lumi down in the station's last escape pod with one instruction: wake up when the sky is blue, and make the Earth a garden again.
 
-Ten years later, on a night just like that one, the same light crosses the sky and falls into the old mine north of Starwatch Harbour. Iron monsters crawl out of the earth. Nia, a girl who has always heard the stars, hears a voice from inside the star: *"It's so cold... help me."*
+**Three hundred years later**, the sky is still grey and nothing grows. Saku is a scavenger in Railtown, a town of people living in abandoned train carriages. The Iron Church, which worships the starstones the meteor left behind, demands a tithe the town cannot pay and threatens to take its children instead. To find old-world treasure, Saku dives into the pitch-dark Sunken Metro with his friend Ran, a mechanic. There they find the pod, and Lumi wakes up.
 
-Kai is Leon's son and a cadet of the watch. He sets out with Nia and his father's starwheel. In the mine they find Barton, the old soldier who rowed away the night Leon vanished and has carried that shame for ten years. Behind the iron crab that guards the pit they find Io, a girl from the star with no memory. All she knows is that she must stop the Ark.
+The journey runs in four movements:
 
-The story runs in four movements:
-
-- **起** The night the star falls, a promise to be home "before the porridge cools", and the girl in the star.
-- **承** The mine, Barton's confession, and one warm night at Kai's table where Io learns what "warm" means.
-- **轉** The Ark rises from the sea. As the party climbs, Io remembers where she came from. The Ark's guardian turns out to be someone Kai has been waiting for all his life.
-- **合** The heart of the Ark, a farewell, and a morning.
+- **起** The station's last forty minutes, Railtown's tithe, and the robot in the metro.
+- **承** Lumi plants the first flower anyone at the Windfarm has seen in sixty years. In Neon City, Lumi learns she was made as a copy of a dead girl. Ran's sister turns up as a church inquisitor.
+- **轉** The "god" of the Iron Cathedral turns out to be Cradle, the station's mind. Dr. Rei uploaded herself into it, and three hundred years alone have bent it.
+- **合** At the Seed Vault in the frozen north, a mother and her second daughter meet again.
 
 The world, characters, story, art and music are all original.
 
 ## How it plays
 
-- **Explore.**
-  - Walk around the harbour and talk to everyone.
-  - Rest at the inn, shop for gear, and save at the chapel or at a star crystal.
-  - On the world map, monsters attack at random as you walk.
-  - Your party walks in a line behind the leader.
-- **Dungeon puzzles.**
-  - Push stone blocks onto switches to open gates.
-  - Fill pits with blocks to make a path across.
-  - Step on switches to raise and lower coloured posts.
-  - Slide across ice; you keep going until something stops you.
-  - If a block gets stuck, a glowing stone in the room puts the blocks back.
-- **Visible monsters.** In dungeons you can see the monsters, and they move one step each time you do. Touching one starts a fight.
-- **Turn-based battles.**
-  - You give every hero a command, then the round plays out in speed order.
-  - Taking and landing hits fills a gauge for each hero. When it is full, they can use their special move: Starblade, Meteor Rain, Ironfall or Ark Light.
-  - Some monsters are weak or resistant to certain elements.
-  - Poison and sleep are status effects.
-- **Enemies have fixed stats** and never scale with your level.
-
-## Languages
-
-The first time you play, the game picks the language your browser uses. You can switch at any time: choose **Language** on the title screen, or open the menu and go to **Config → Language**.
+- **Conduit puzzles.** Ruins are powered by old conduits. Face a piece and press Z to turn it; when a line joins a generator to a receiver, the receiver lights and the doors it controls open. Some rooms need two lines lit at once.
+- **Darkness.** The Sunken Metro is pitch black outside a small circle of light.
+- **The Windfarm changes.** After Lumi's first sprout, the dead fields turn green and the turbines start turning again.
+- **Battles.**
+  - Turn-based, front view, with a command for each of the four heroes.
+  - Each hero has a gauge that fills in battle; when it is full they can use a special move.
+  - Gadgets and spells cost EP.
+  - Monsters are hand-drawn pixel art, with fixed stats that never scale with your level.
+- **The party:**
+  - 朔 Saku, a scavenger with a blade;
+  - 蘭 Ran, a mechanic with nail guns and gadget bombs;
+  - 老齒輪 Old Gears, a church knight who deserted, with a hammer;
+  - 露米 Lumi, a seed keeper who heals with light.
 
 ## Controls
 
 | | Keyboard | Gamepad | Touch |
 |---|---|---|---|
 | Move | arrow keys / WASD | d-pad / stick | on-screen d-pad |
-| Confirm, talk, check | Z / Enter / Space | A | A |
+| Confirm, talk, turn a conduit | Z / Enter / Space | A | A |
 | Cancel, open the menu | X / Esc | B | B |
-| Menu | C / Tab | Y / Start | MENU (選單) |
 
-## How it looks and sounds
-
-- Characters are hand-drawn 16×24 pixel sprites with four directions and walking frames.
-- Monsters and props are painted from shaded shapes on limited colour ramps, then dithered and outlined.
-- The title screen flies over the island with a Mode 7-style rotating ground plane, and battles open with a mosaic transition.
-- The music is played by a small synthesizer built in code. It has its own main theme, a music-box theme for Io and a farewell piece.
-- The Chinese text uses the Cubic 11 (俐方體11號) pixel font. It is free to use, and its license is in `fonts/`.
-
-The engine, the pixel art style and the dungeon layouts are shared with [蒼潮魔塔傳 Spire of the Blue Tide](https://ywchen0711.github.io/spire-tide/).
+Switch between Chinese and English on the title screen or in Config.
 
 ## Files
 
-- `js/story.js` holds all the dialogue and events.
-- `js/main.js` runs the main loop, title screen, prologue, epilogue and credits.
-- `js/field.js` handles walking, the trailing party, NPCs, chests, puzzles and visible monsters.
-- `js/battle.js` contains battles, effects and backdrops.
-- `js/rules.js` has the battle math. It has no drawing code, so it can be simulated in Node.
-- `js/maps.js` holds every map, as rows of characters plus a legend.
-- `js/data.js` holds heroes, items, spells, monsters and shops.
-- `js/party.js` covers stats, levels, the inventory and saving.
-- `js/menu.js` covers the field menu, equipment, status, shops and settings.
-- `js/ui.js` has the dialogue boxes and list menus.
-- `js/i18n.js` switches the language. Text is written as `L('中文', 'English')`.
-- `js/gfx.js`, `js/sprites.js`, `js/enemies.js` and `js/tiles.js` draw the pixels, characters, monsters and terrain.
-- `js/audio.js` is the synthesizer, sequencer, soundtrack and sound effects.
+- `js/story.js` holds every scene and conversation.
+- `js/maps.js` holds every place, from the station to the Seed Vault, and the conduit puzzles.
+- `js/field.js` handles walking, conduits, gates and visible monsters.
+- `js/pixmon.js` holds the hand-drawn monsters.
+- `js/tiles.js` draws the station, ruins, rails, carriages and glass desert.
+- `js/battle.js` and `js/rules.js` contain the battles and their maths.
+- `js/data.js` holds the heroes, gear and monsters.
+- `js/main.js` covers the title, the opening and the ending.
+- `js/i18n.js` switches the language.
 
 There is no build step. Open `index.html` through any static web server.

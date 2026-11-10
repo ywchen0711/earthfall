@@ -290,52 +290,52 @@ export function text(s, x, y, col = '#f8f8f8', { shadow = '#101030', align = 'le
 }
 
 // ---------- windows ----------
-// stepped blue gradient with a bevelled silver frame
+// an old-world terminal panel: near-black glass, a thin cyan frame with corner brackets, faint scanlines
 const winCache = new Map();
-export const WIN = { top: [40, 72, 184], bot: [8, 16, 88] };
+export const WIN = { top: [14, 34, 34], bot: [6, 16, 18] };
 export function windowBox(x, y, w, h, { g = ctx, alpha = 1 } = {}) {
   const key = w + 'x' + h + (WIN.top.join());
   let c = winCache.get(key);
   if (!c) {
     c = canvas(w, h);
     const X = c.x;
-    for (let yy = 0; yy < h; yy += 2) {
-      const t = Math.floor((yy / h) * 8) / 7, col = WIN.top.map((v, i) => v + (WIN.bot[i] - v) * t);
-      X.fillStyle = snes(hex(col)); X.fillRect(2, yy, w - 4, 2);
+    for (let yy = 1; yy < h - 1; yy++) {
+      const t = Math.floor((yy / h) * 6) / 5, col = WIN.top.map((v, i) => v + (WIN.bot[i] - v) * t);
+      X.fillStyle = snes(hex(yy % 2 ? col.map((v) => v * 0.8) : col)); X.fillRect(1, yy, w - 2, 1);
     }
-    X.fillStyle = '#000010'; X.fillRect(1, 0, w - 2, 1); X.fillRect(1, h - 1, w - 2, 1); X.fillRect(0, 1, 1, h - 2); X.fillRect(w - 1, 1, 1, h - 2);
-    X.fillStyle = '#e8e8f0'; X.fillRect(2, 1, w - 4, 1); X.fillRect(1, 2, 1, h - 4);
-    X.fillStyle = '#9098b0'; X.fillRect(2, h - 2, w - 4, 1); X.fillRect(w - 2, 2, 1, h - 4);
-    X.fillStyle = '#c0c8d8'; X.fillRect(2, 2, w - 4, 1); X.fillRect(2, 2, 1, h - 4);
-    X.fillStyle = '#5860a0'; X.fillRect(3, h - 3, w - 5, 1); X.fillRect(w - 3, 3, 1, h - 5);
+    X.fillStyle = '#0a2a28'; X.fillRect(0, 0, w, 1); X.fillRect(0, h - 1, w, 1); X.fillRect(0, 0, 1, h); X.fillRect(w - 1, 0, 1, h);
+    X.fillStyle = '#2a8a78'; X.fillRect(2, 2, w - 4, 1); X.fillRect(2, h - 3, w - 4, 1); X.fillRect(2, 2, 1, h - 4); X.fillRect(w - 3, 2, 1, h - 4);
+    // bright corner brackets
+    X.fillStyle = '#7cf8d8';
+    for (const [cx, cy, dx, dy] of [[1, 1, 1, 1], [w - 2, 1, -1, 1], [1, h - 2, 1, -1], [w - 2, h - 2, -1, -1]]) { for (let k = 0; k < 6; k++) { X.fillRect(cx + dx * k, cy, 1, 1); X.fillRect(cx, cy + dy * k, 1, 1); } }
     if (winCache.size > 200) winCache.clear();
     winCache.set(key, c);
   }
   g.globalAlpha = alpha; g.drawImage(c, Math.round(x), Math.round(y)); g.globalAlpha = 1;
 }
 
-// the pointing-hand cursor
+// the cursor: a small glowing chevron
 export const HAND = fromGrid([
-  '..oooo......',
-  '.owwwwo.....',
-  'owwwwwwoooo.',
-  'owwwwwwwwwwo',
-  'owwwwwwoooo.',
-  'owwwwwwwwo..',
-  'owwwwwwoo...',
-  'owwwwwwwwo..',
-  '.owwwwoo....',
-  '..oooo......',
-], { o: '#101028', w: '#f8f0e0' });
+  '............',
+  '..oo........',
+  '..owoo......',
+  '..owwwoo....',
+  '..owwwwwoo..',
+  '..owwwwwoo..',
+  '..owwwoo....',
+  '..owoo......',
+  '..oo........',
+  '............',
+], { o: '#06302a', w: '#7cf8d8' });
 export const HAND_D = fromGrid([
-  '..oooooo..',
-  '.owwwwwwo.',
-  '.owwwwwwo.',
+  '..........',
+  '.oooooooo.',
   '.owwwwwwo.',
   '..owwwwo..',
   '...owwo...',
   '....oo....',
-], { o: '#101028', w: '#f8f0e0' });
+  '..........',
+], { o: '#06302a', w: '#7cf8d8' });
 
 export function bar(x, y, w, v, max, col = '#58e070', g = ctx) {
   g.fillStyle = '#080818'; g.fillRect(x, y, w, 3);

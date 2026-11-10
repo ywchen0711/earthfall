@@ -47,6 +47,22 @@ const iconArt = (kind) => art('icon' + kind, () => {
   return canvas(16, 16);
 });
 
+// conduit art: a floor plate with a metal channel; powered channels glow
+const pipeArt = (shape, rot, lit, blink, fixed) => art(`pipe${shape}${rot}${lit}${blink}${fixed}`, () => {
+  const c = canvas(16, 16), g = c.x;
+  g.fillStyle = '#14181e'; g.fillRect(0, 0, 16, 16);
+  g.fillStyle = fixed ? '#3a3020' : '#2a323e'; g.fillRect(1, 1, 14, 14);
+  g.fillStyle = fixed ? '#5a4a30' : '#46505e'; g.fillRect(1, 1, 14, 1); g.fillRect(1, 1, 1, 14);
+  for (const [x, y] of [[2, 2], [13, 2], [2, 13], [13, 13]]) { g.fillStyle = '#8890a0'; g.fillRect(x, y, 1, 1); }
+  const core = lit ? (blink ? '#c0fff0' : '#60f8d0') : '#5a606a', edge = lit ? '#20a088' : '#30343c';
+  const arm = (d) => { const [x, y, w, h] = [[6, 0, 4, 8], [8, 6, 8, 4], [6, 8, 4, 8], [0, 6, 8, 4]][d]; g.fillStyle = edge; g.fillRect(x, y, w, h); g.fillStyle = core; g.fillRect(x + (w > h ? 0 : 1), y + (w > h ? 1 : 0), w > h ? w : w - 2, w > h ? h - 2 : h); };
+  for (const d of SHAPES[shape].map((d) => (d + rot) % 4)) arm(d);
+  g.fillStyle = edge; g.fillRect(5, 5, 6, 6); g.fillStyle = core; g.fillRect(6, 6, 4, 4);
+  return c;
+});
+const sourceArt = (f) => art('src' + f, () => { const p = new Painter(16, 20), R = ramp('#5a6070', 5); p.poly([[1, 19], [1, 6], [15, 6], [15, 19]], R, { lum: 0.6 }); p.ball(8, 10, 4, 4, ['#106050', '#20c0a0', '#60f8d0', '#e0fff8'], { z: 6, amb: 0.6 + f * 0.15 }); return p.finish({ out: '#081014' }); });
+const sinkArt = (lit, b) => art('sink' + lit + b, () => { const p = new Painter(16, 20), R = ramp('#6a5a48', 5); p.poly([[2, 19], [2, 8], [14, 8], [14, 19]], R, { lum: 0.6 }); p.ball(8, 7, 4, 4, lit ? ['#106050', '#20c0a0', '#60f8d0', b ? '#ffffff' : '#e0fff8'] : ['#201810', '#402818', '#603828', '#805038'], { z: 6, amb: lit ? 0.8 : 0.3 }); return p.finish({ out: '#100c08' }); });
+
 // ---------- map loading ----------
 let MAPS = {};
 export function setMaps(m) { MAPS = m; }
@@ -87,6 +103,7 @@ export function loadMap(id, x, y, dir = 'd') {
     if (e.cond && !e.cond(S.flags)) e.gone = true;
   }
   F.toggle = false;
+  if (F.ents.some((e) => e.type === 'source')) { checkPowerSoon = true; }
   F.p = { x, y, px: x * 16, py: y * 16, dir, moving: false, step: 0, slide: false };
   F.trail = [];
   for (let i = 0; i < 40; i++) F.trail.push({ px: x * 16, py: y * 16, dir });
@@ -109,6 +126,8 @@ function entSolid(e) {
     case 'post': return (e.color === 'r') !== F.toggle;
     case 'enemy': return false;
     case 'solid': return true;
+    case 'pipe': case 'source': case 'sink': return true;
+    case 'sprite': return !!e.solid;
     default: return false;
   }
 }
@@ -125,6 +144,38 @@ function blocked(x, y, forBlock = false) {
 const npcAt = (x, y) => F.ents.find((e) => !e.gone && e.type === 'npc' && (e.x === x && e.y === y || (e.tx === x && e.ty === y)));
 
 // ---------- puzzles ----------
+// ---------- conduits ----------
+// each piece has openings (0 up, 1 right, 2 down, 3 left) that turn with it; power runs from a
+// generator through joined openings, and a receiver that gets power opens the gates of its group
+const SHAPES = { I: [0, 2], L: [0, 1], T: [0, 1, 2], X: [0, 1, 2, 3] };
+const STEP = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+export const pipeOpen = (e) => SHAPES[e.shape].map((d) => (d + e.rot) % 4);
+export function checkPower() {
+  for (const e of F.ents) if (e.type === 'pipe' || e.type === 'sink') e.lit = false;
+  const at = (x, y, t) => F.ents.find((o) => !o.gone && o.x === x && o.y === y && o.type === t);
+  for (const src of F.ents.filter((e) => e.type === 'source')) {
+    const q = [];
+    for (let d = 0; d < 4; d++) { const pp = at(src.x + STEP[d][0], src.y + STEP[d][1], 'pipe'); if (pp && pp.group === src.group && pipeOpen(pp).includes((d + 2) % 4)) q.push(pp); }
+    while (q.length) {
+      const pp = q.pop();
+      if (pp.lit) continue;
+      pp.lit = true;
+      for (const d of pipeOpen(pp)) {
+        const nx = pp.x + STEP[d][0], ny = pp.y + STEP[d][1];
+        const nxt = at(nx, ny, 'pipe');
+        if (nxt && nxt.group === pp.group && !nxt.lit && pipeOpen(nxt).includes((d + 2) % 4)) q.push(nxt);
+        const sk = at(nx, ny, 'sink');
+        if (sk && sk.group === pp.group) sk.lit = true;
+      }
+    }
+  }
+  for (const sk of F.ents.filter((e) => e.type === 'sink' && e.lit && !e.done)) {
+    sk.done = true;
+    const key = 'gate:' + S.map + ':' + sk.group;
+    if (!S.flags[key]) { S.flags[key] = true; for (const g of F.ents) if (g.type === 'gate' && g.group === sk.group) g.open = true; sfx('gate'); F.shake = 10; }
+  }
+}
+
 function checkPlates() {
   const groups = {};
   for (const e of F.ents) if (e.type === 'plate' && !e.gone) {
@@ -236,8 +287,10 @@ function moveEnemies() {
 }
 
 // ---------- update ----------
+let checkPowerSoon = false;
 export function updateField() {
   F.frame++;
+  if (checkPowerSoon) { checkPowerSoon = false; checkPower(); }
   if (F.banner > 0) F.banner--;
   if (F.shake > 0) F.shake--;
   const p = F.p;
@@ -285,7 +338,9 @@ function interact() {
   let tx = p.x + dx, ty = p.y + dy;
   // talk across a counter
   if (TILES[kindAt(tx, ty)] && kindAt(tx, ty) === 'counter') { tx += dx; ty += dy; }
-  const e = F.ents.find((o) => !o.gone && o.x === tx && o.y === ty && ['npc', 'chest', 'save', 'sign', 'spring', 'boss', 'solid'].includes(o.type) && (o.talk || o.type === 'chest' || o.type === 'save' || o.type === 'spring'));
+  const pipe = F.ents.find((o) => !o.gone && o.x === tx && o.y === ty && o.type === 'pipe');
+  if (pipe) { if (pipe.fixed) { sfx('buzz'); return; } pipe.rot = (pipe.rot + 1) % 4; sfx('switch'); checkPower(); return; }
+  const e = F.ents.find((o) => !o.gone && o.x === tx && o.y === ty && ['npc', 'chest', 'save', 'sign', 'spring', 'boss', 'solid', 'sink', 'source'].includes(o.type) && (o.talk || o.type === 'chest' || o.type === 'save' || o.type === 'spring'));
   if (!e) return;
   if (e.type === 'npc') {
     // face the player
@@ -372,13 +427,16 @@ function drawEnt(e, cx, cy) {
     case 'spring': ctx.drawImage(springArt(), x, y); if (F.frame % 30 < 15) { ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 5 + (F.frame % 5), y + 6, 1, 1); } break;
     case 'icon': { const a = iconArt(e.icon); ctx.drawImage(a, x + 8 - a.width / 2, y + 16 - a.height); break; }
     case 'enemy': {
-      const a = miniArt(e.art), b = Math.abs(Math.sin((F.frame + e.n * 13) / 10)) * 2;
+      const a = miniArt(e.art, e.hue || 0), b = Math.abs(Math.sin((F.frame + e.n * 13) / 10)) * 2;
       if (e.stun && F.frame % 4 < 2) break;
       ctx.drawImage(shadow, x + 1, y + 12);
       ctx.drawImage(e.dir === 'r' ? flipped(e.art, a) : a, x + 8 - Math.floor(a.width / 2), y + 14 - a.height - Math.round(b));
       break;
     }
-    case 'boss': { const a = enemyArt(e.art), s = e.scale || 0.5, w = a.width * s, h = a.height * s; ctx.drawImage(a, Math.round(x + 8 - w / 2), Math.round(y + 16 - h + Math.sin(F.frame / 20) * 2), w, h); break; }
+    case 'boss': { const a = enemyArt(e.art, e.hue || 0), s = e.scale || 0.5, w = a.width * s, h = a.height * s; ctx.drawImage(a, Math.round(x + 8 - w / 2), Math.round(y + 16 - h + Math.sin(F.frame / 20) * 2), w, h); break; }
+    case 'pipe': ctx.drawImage(pipeArt(e.shape, e.rot, !!e.lit, (F.frame >> 3) % 2, !!e.fixed), x, y); break;
+    case 'source': ctx.drawImage(sourceArt((F.frame >> 2) % 3), x, y - 4); break;
+    case 'sink': ctx.drawImage(sinkArt(!!e.lit, (F.frame >> 3) % 2), x, y - 4); break;
     case 'sprite': if (e.draw) e.draw(ctx, x, y, F.frame); break;
     case 'sign': if (e.sprite === 'stone') { ctx.drawImage(stoneArt(), x, y - 4); if (F.frame % 50 < 25) { ctx.fillStyle = '#c0fff8'; ctx.fillRect(x + 6 + (F.frame % 3), y - 2, 1, 1); } } break;
     default: break;
