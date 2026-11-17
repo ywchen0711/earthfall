@@ -45,6 +45,15 @@ The world, characters, story and music are original. The monster sprites are by 
 
 Switch between Chinese and English on the title screen or in Config.
 
+## iPhone and iPad
+
+- The touch pad shows up by itself on phones and tablets (iPads too, even though iPadOS says it is a Mac). Upright, it sits under the picture; turned sideways, the d-pad and the buttons sit on either side of it. The notch and the home bar never cover anything.
+- Hints on screen name the pad's buttons (A, B, MENU) instead of the keys while the pad is showing.
+- Sound starts with your first tap. If a phone call, Siri or the lock screen cuts the sound off, the next tap brings it back. On iOS 17 and later the game plays as a game, so the silent switch does not mute the music.
+- Add it to the Home Screen (Share → Add to Home Screen) to play full screen, with its own icon.
+- iOS can close a tab in the background without warning. If that happens while you are walking around, **Continue** on the title screen turns into **Resume** and puts you back where you were. Your save-point save is kept as it was.
+- The game runs at the same speed on 120 Hz screens and in Low Power Mode.
+
 ## Files
 
 - `js/story.js` holds every scene and conversation.

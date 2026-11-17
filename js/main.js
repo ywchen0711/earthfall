@@ -2,10 +2,10 @@
 // and the glue between the field, battles, menus and story scripts.
 import { ctx, W, H, canvas, text, textW, windowBox, HAND, tint, fromGrid } from './gfx.js';
 import * as gfx from './gfx.js';
-import { input, pollInput, endInput, setupTouch } from './input.js';
+import { input, pollInput, endInput, setupTouch, touchUI, K } from './input.js';
 import { initAudio, playMusic, stopMusic, sfx, currentSong } from './audio.js';
 import { UI, uiTick, say, talk, ask, wait, menu, notice } from './ui.js';
-import { S, reset, addMember, addItem, fullHeal, save, load, hasSave, setSpellNamer, stats } from './party.js';
+import { S, reset, addMember, addItem, fullHeal, save, load, hasSave, setSpellNamer, stats, dropSave } from './party.js';
 import { SPELLS, GROUPS, TROOPS } from './data.js';
 import { MAPS } from './maps.js';
 import { F, setMaps, loadMap, updateField, drawField, walkEnt, walkPlayer, findEnt } from './field.js';
@@ -243,7 +243,7 @@ function updateTitle() {
   }
   if (input.pressed('b')) title.ready = false;
 }
-const titleOpts = () => [{ id: 'new', label: L('新的冒險', 'New Game') }, { id: 'cont', label: L('繼續冒險', 'Continue'), disabled: !hasSave(0) }, { id: 'lang', label: LANG === 'en' ? 'Language: English' : '語言：中文' }];
+const titleOpts = () => [{ id: 'new', label: L('新的冒險', 'New Game') }, { id: 'cont', label: hasSave('r') ? L('從中斷處繼續', 'Resume') : L('繼續冒險', 'Continue'), disabled: !hasSave(0) && !hasSave('r') }, { id: 'lang', label: LANG === 'en' ? 'Language: English' : '語言：中文' }];
 function drawTitle() {
   const t = title.t, horizon = 84;
   // sky
@@ -271,7 +271,7 @@ function drawTitle() {
   }
   if (!title.ready) {
     if ((t >> 5) % 2) text('PRESS START', W / 2, 170, '#ffffff', { align: 'center' });
-    text(L('Z 決定　X 取消／選單　方向鍵 移動', 'Z: OK   X: Cancel/Menu   Arrows: Move'), W / 2, 190, '#e8f0ff', { align: 'center', shadow: '#101030' });
+    text((touchUI() ? L('A 決定　B 取消／選單　十字鍵 移動', 'A: OK   B: Cancel/Menu   D-pad: Move') : L('Z 決定　X 取消／選單　方向鍵 移動', 'Z: OK   X: Cancel/Menu   Arrows: Move')), W / 2, 190, '#e8f0ff', { align: 'center', shadow: '#101030' });
   } else {
     const opts = titleOpts();
     windowBox(66, 136, 124, 64);
@@ -342,7 +342,9 @@ function drawIntro() {
 // ---------- continue / game over ----------
 async function continueGame() {
   await trans('out', 20);
-  if (!load(0)) { await trans('in', 10); return; }
+  const slot = hasSave('r') ? 'r' : 0;
+  if (!load(slot)) { await trans('in', 10); return; }
+  dropSave('r');
   scene = 'field';
   loadMap(S.map, S.x, S.y, S.dir);
   playMusic(mapMusic());
@@ -365,7 +367,7 @@ function drawOver() {
   ctx.globalAlpha = a;
   bigText('GAME OVER', W / 2, 80, [248, 96, 96], [160, 24, 40], 2);
   text(L('冒險在這裡結束了……', 'Your adventure ends here...'), W / 2, 130, '#c0c0d0', { align: 'center' });
-  if (over.t > 90 && (over.t >> 5) % 2) text(L('按 Z 回到標題畫面', 'Press Z to return to the title'), W / 2, 170, '#f8f8f8', { align: 'center' });
+  if (over.t > 90 && (over.t >> 5) % 2) text(K(L('按 Z 回到標題畫面', 'Press Z to return to the title')), W / 2, 170, '#f8f8f8', { align: 'center' });
   ctx.globalAlpha = 1;
 }
 
@@ -478,6 +480,19 @@ function frame(now) {
   if (n) { draw(); if (gfx.present) gfx.present(!document.body.classList.contains('noscan')); }
   requestAnimationFrame(frame);
 }
+
+// iOS closes hidden tabs without warning. On a phone or tablet, hiding the page during free play keeps
+// a resume point that Continue offers next time; coming back to the page (or hiding it in a scene
+// that cannot be resumed) drops it again, so it only outlives a tab that really was closed.
+const coarse = (() => { try { return navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
+const inGame = () => scene !== 'title' && scene !== 'boot';
+function suspend() {
+  if (!coarse) return;
+  if (scene === 'field' && !F.busy && !UI.active && !T.job) save('r');
+  else if (inGame()) dropSave('r');
+}
+addEventListener('pagehide', suspend);
+document.addEventListener('visibilitychange', () => { if (document.hidden) suspend(); else if (inGame()) dropSave('r'); });
 
 // audio needs a user gesture
 const unlock = () => initAudio();

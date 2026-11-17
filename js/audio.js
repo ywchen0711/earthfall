@@ -7,9 +7,15 @@ export const vol = { music: 0.55, sfx: 0.7 };
 export const music = { on: true };
 const mv = () => (music.on ? vol.music : 0);
 
+let noAudio = false, primed = false;
 export function initAudio() {
-  if (A) { if (A.state === 'suspended') A.resume(); return; }
-  A = new (window.AudioContext || window.webkitAudioContext)();
+  unlockMedia();
+  if (A) { wake(); return; }
+  if (noAudio) return;
+  // iOS 17+: play like a game, not like a web page, so the silent switch does not mute the music
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* older iOS */ }
+  try { A = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { A = null; }
+  if (!A) { noAudio = true; return; } // no Web Audio in this browser: the game plays on without the sound chip
   master = A.createGain(); master.gain.value = 0.8;
   const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7000;
   master.connect(lp); lp.connect(A.destination);
@@ -29,8 +35,23 @@ export function initAudio() {
   noiseBuf = A.createBuffer(1, A.sampleRate, A.sampleRate);
   const ch = noiseBuf.getChannelData(0);
   for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
-  if (A.state === 'suspended') A.resume();
+  wake();
   if (pending) { const p = pending; pending = null; playMusic(p); }
+}
+function unlockMedia() { /* every sound comes from the sound chip */ }
+function pauseMedia() {}
+function resumeMedia() {}
+// iOS lets sound start only inside a tap or key handler, and puts it to sleep ('interrupted') after a
+// call, Siri or the lock screen: resume it and play one silent sample so the speaker is really on
+function wake() {
+  if (!A || document.hidden) return;
+  if (A.state !== 'running') { try { const p = A.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* closed */ } primed = false; }
+  if (primed) return;
+  try { const s = A.createBufferSource(); s.buffer = A.createBuffer(1, 1, 22050); s.connect(A.destination); s.start(0); primed = true; } catch (e) { /* ignore */ }
+}
+function sleep() {
+  if (A && A.state === 'running') { try { const p = A.suspend(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* closed */ } }
+  pauseMedia();
 }
 export function setVolumes() { if (!A) return; musicBus.gain.value = mv(); sfxBus.gain.value = vol.sfx; }
 
@@ -332,4 +353,10 @@ if (typeof document !== 'undefined') {
   const b = document.getElementById('musicBtn');
   if (b) { b.classList.toggle('off', !music.on); b.addEventListener('click', (e) => { e.stopPropagation(); initAudio(); setMusic(!music.on); }); }
   addEventListener('keydown', (e) => { if (e.code === 'KeyM' && !e.repeat) setMusic(!music.on); });
+  // any tap, click or key unlocks the sound: iOS accepts touchend and click (not touchstart), and the
+  // on-screen pad cancels the click, so touchend is caught for the whole page before the pad sees it
+  for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, initAudio, { capture: true, passive: true });
+  // the sound sleeps while the page is hidden and wakes when it comes back
+  document.addEventListener('visibilitychange', () => { if (document.hidden) sleep(); else { wake(); resumeMedia(); } });
+  addEventListener('pageshow', () => { wake(); resumeMedia(); });
 }
